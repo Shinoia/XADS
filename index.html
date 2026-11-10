@@ -126,6 +126,25 @@
   .det div small{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
   .det div{font-size:14px;word-break:break-word}
   .det .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+  select{padding:13px 38px 13px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;background:#fff;color:var(--ink);
+    appearance:none;-webkit-appearance:none;cursor:pointer;max-width:220px;
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+  select:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 4px rgba(91,91,214,.12)}
+  #abaAcessos .toolbar select{flex:1;max-width:none}
+  @media (max-width:560px){ #abaLista .toolbar{flex-wrap:wrap} #abaLista .toolbar input{flex-basis:100%} #filtroOp{flex:1;max-width:none} }
+  .por{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);
+    font-size:11px;font-weight:600;text-transform:none;letter-spacing:0}
+  .acessos{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(27,29,42,.04)}
+  .acessos:empty{display:none}
+  .acesso{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:14.5px}
+  .acesso:last-child{border-bottom:0}
+  .acesso .ini{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;flex:none;color:#fff;font-size:12px;font-weight:700;
+    text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+  .acesso b{font-weight:600}
+  .acesso .sep{color:#c3c6d4;margin:0 6px}
+  .acesso time{font-variant-numeric:tabular-nums;color:#3d4152}
+  .acesso small{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
   .empty{text-align:center;color:var(--muted);padding:48px 10px;background:rgba(255,255,255,.6);border:1px dashed var(--line);border-radius:16px}
 
   .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,8px);background:var(--ink);color:#fff;
@@ -169,7 +188,8 @@
   <section id="telaApp" hidden>
     <nav class="tabs">
       <button type="button" class="on" data-aba="novo">Novo cadastro</button>
-      <button type="button" data-aba="lista">Meus cadastros<span class="badge" id="contador">0</span></button>
+      <button type="button" data-aba="lista"><span id="rotLista">Meus cadastros</span><span class="badge" id="contador">0</span></button>
+      <button type="button" data-aba="acessos" id="tabAcessos" hidden>Acessos</button>
     </nav>
 
     <!-- NOVO CADASTRO -->
@@ -270,10 +290,21 @@
     <section id="abaLista" hidden>
       <div class="toolbar">
         <input id="busca" placeholder="Buscar por nome, e-mail, empresa, CPF, IMEI ou Pix">
+        <select id="filtroOp" hidden><option value="">Todos os operadores</option></select>
         <button class="btn ghost" id="btnAtualizar" type="button">Atualizar</button>
       </div>
       <div class="status" id="statusLista"></div>
       <div id="lista"></div>
+    </section>
+
+    <!-- ACESSOS (só administrador) -->
+    <section id="abaAcessos" hidden>
+      <div class="toolbar">
+        <select id="filtroAcesso"><option value="">Todos os usuários</option></select>
+        <button class="btn ghost" id="btnAtualizarAcessos" type="button">Atualizar</button>
+      </div>
+      <div class="status" id="statusAcessos"></div>
+      <div id="listaAcessos" class="acessos"></div>
     </section>
   </section>
 </main>
@@ -339,6 +370,7 @@ async function api(acao, extra){
     throw new Error(j.erro || "Erro.");
   }
   if(j.operador){ sessao.operador = j.operador; mostrarOperador(j.operador); }
+  if(typeof j.admin === "boolean" && j.admin !== sessao.admin){ sessao.admin = j.admin; aplicarPerfil(); }
   return j;
 }
 async function apiListar(){
@@ -349,13 +381,23 @@ async function apiCadastrar(dados){
 }
 
 /* ---------- sessão do operador ---------- */
-let sessao = { usuario:"", senha:"", operador:"" };
+let sessao = { usuario:"", senha:"", operador:"", admin:false };
 let cadastros = [];
 
 function mostrarOperador(nome){
   const el = $("#opNome");
   el.textContent = nome;
   el.dataset.ini = String(nome || "?").trim().charAt(0);
+}
+// administrador vê "Todos os cadastros", filtro por operador e a aba Acessos
+function aplicarPerfil(){
+  const adm = !!sessao.admin;
+  $("#rotLista").textContent = adm ? "Todos os cadastros" : "Meus cadastros";
+  $("#btnVerLista").textContent = adm ? "Ver todos os cadastros" : "Ver meus cadastros";
+  $("#tabAcessos").hidden = !adm;
+  $("#filtroOp").hidden = !adm;
+  if(!adm && !$("#abaAcessos").hidden) trocarAba("novo");
+  renderLista();
 }
 function entrarNoApp(){
   mostrarOperador(sessao.operador);
@@ -376,9 +418,9 @@ $("#formEntrada").addEventListener("submit", async ev => {
   if(!senha) return mostrarErro(erro, "Digite sua senha.");
   mostrarErro(erro, "");
   const btn = $("#btnEntrar"); btn.disabled = true; btn.textContent = "Entrando…";
-  sessao = { usuario, senha, operador:usuario };
+  sessao = { usuario, senha, operador:usuario, admin:false };
   try{
-    cadastros = await apiListar();  // também confere usuário e senha
+    cadastros = (await api("entrar")).cadastros || [];  // confere usuário e senha e grava o login no histórico
     store.set("cad_usuario", usuario); store.set("cad_senha", senha);
     renderLista();
     entrarNoApp();
@@ -391,7 +433,7 @@ $("#formEntrada").addEventListener("submit", async ev => {
 
 function sair(msg){
   store.del("cad_senha");
-  sessao = { usuario:"", senha:"", operador:"" }; cadastros = [];
+  sessao = { usuario:"", senha:"", operador:"", admin:false }; cadastros = [];
   $("#opBox").hidden = true; $("#telaApp").hidden = true; $("#telaEntrada").hidden = false;
   $("#inCodigo").value = "";
   mostrarErro($("#erroEntrada"), msg || "");
@@ -404,7 +446,9 @@ function trocarAba(nome){
   document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.aba === nome));
   $("#abaNovo").hidden = nome !== "novo";
   $("#abaLista").hidden = nome !== "lista";
+  $("#abaAcessos").hidden = nome !== "acessos";
   if(nome === "lista") carregarLista();
+  if(nome === "acessos") carregarAcessos();
 }
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => trocarAba(b.dataset.aba)));
 
@@ -524,13 +568,18 @@ async function carregarLista(silencioso){
 
 function renderLista(){
   $("#contador").textContent = cadastros.length;
+  atualizarFiltroOp();
   const q = limpar($("#busca").value.trim());
-  const filtrados = !q ? cadastros : cadastros.filter(c =>
-    limpar([c.pessoa, c.id, c.email, c.empresa, c.cpf, c.imei, c.pix].join(" ")).includes(q));
+  const opSel = sessao.admin ? $("#filtroOp").value : "";
+  const filtrados = cadastros.filter(c =>
+    (!opSel || (opSel === "-" ? !c.operador : limpar(c.operador) === opSel)) &&
+    (!q || limpar([c.pessoa, c.id, c.email, c.empresa, c.cpf, c.imei, c.pix, c.operador].join(" ")).includes(q)));
 
-  $("#statusLista").textContent = cadastros.length
-    ? (q ? `${filtrados.length} de ${cadastros.length} cadastros` : `${cadastros.length} cadastro${cadastros.length > 1 ? "s" : ""} feitos por ${sessao.operador}`)
-    : "";
+  const total = cadastros.length, plural = n => n === 1 ? "" : "s";
+  $("#statusLista").textContent = !total ? "" :
+    (q || opSel) ? `${filtrados.length} de ${total} cadastros` :
+    sessao.admin ? `${total} cadastro${plural(total)} no sistema` :
+    `${total} cadastro${plural(total)} feito${plural(total)} por ${sessao.operador}`;
 
   if(!cadastros.length){
     $("#lista").innerHTML = `<div class="empty">Você ainda não fez nenhum cadastro.</div>`;
@@ -554,7 +603,7 @@ function renderLista(){
             <em><small>Pix</small>${esc(c.pix) || "—"}</em>
           </div>
         </div>
-        <div class="when">${esc(c.empresa)}<br>${esc(c.data)}</div>
+        <div class="when">${esc(c.empresa)}<br>${esc(c.data)}${sessao.admin ? `<br><span class="por">${esc(c.operador || "sem operador")}</span>` : ""}</div>
       </summary>
       <div class="det">
         ${campo("E-mail", c.email)}
@@ -582,6 +631,50 @@ function renderLista(){
     </details>`).join("");
 }
 $("#busca").addEventListener("input", renderLista);
+$("#filtroOp").addEventListener("change", renderLista);
+
+// monta a lista de operadores do filtro (só administrador)
+function atualizarFiltroOp(){
+  const sel = $("#filtroOp");
+  if(!sessao.admin) return;
+  const atual = sel.value;
+  const nomes = [...new Set(cadastros.map(c => c.operador).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+  const semOp = cadastros.some(c => !c.operador);
+  const cont = n => cadastros.filter(c => limpar(c.operador) === limpar(n)).length;
+  sel.innerHTML = `<option value="">Todos os operadores</option>` +
+    nomes.map(n => `<option value="${esc(limpar(n))}">${esc(n)} (${cont(n)})</option>`).join("") +
+    (semOp ? `<option value="-">Sem operador (${cadastros.filter(c => !c.operador).length})</option>` : "");
+  sel.value = [...sel.options].some(o => o.value === atual) ? atual : "";
+}
+
+/* ---------- acessos (só administrador) ---------- */
+let acessos = [];
+async function carregarAcessos(){
+  $("#statusAcessos").textContent = "Carregando…";
+  try{
+    acessos = (await api("acessos")).acessos || [];
+    renderAcessos();
+  }catch(e){
+    $("#statusAcessos").textContent = "Erro: " + e.message;
+  }
+}
+function renderAcessos(){
+  const sel = $("#filtroAcesso"), atual = sel.value;
+  const nomes = [...new Set(acessos.map(a => a.usuario).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+  sel.innerHTML = `<option value="">Todos os usuários</option>` + nomes.map(n => `<option>${esc(n)}</option>`).join("");
+  sel.value = nomes.includes(atual) ? atual : "";
+  const lista = sel.value ? acessos.filter(a => a.usuario === sel.value) : acessos;
+  $("#statusAcessos").textContent = acessos.length ? `${lista.length} acesso${lista.length === 1 ? "" : "s"} (mais recentes primeiro)` : "";
+  $("#listaAcessos").innerHTML = lista.length ? lista.map(a => `
+    <div class="acesso">
+      <span class="ini">${esc(String(a.usuario || "?").charAt(0))}</span>
+      <span><b>${esc(a.usuario)}</b><span class="sep">/</span><time>${esc(a.quando)}</time></span>
+      <small>${esc(a.tipo)}</small>
+    </div>`).join("") : "";
+  if(!acessos.length) $("#statusAcessos").textContent = "Nenhum acesso registrado ainda.";
+}
+$("#filtroAcesso").addEventListener("change", renderAcessos);
+$("#btnAtualizarAcessos").addEventListener("click", carregarAcessos);
 $("#btnAtualizar").addEventListener("click", () => carregarLista());
 $("#lista").addEventListener("click", ev => {
   const b = ev.target.closest("[data-txt]");
@@ -592,9 +685,10 @@ $("#lista").addEventListener("click", ev => {
 (function iniciar(){
   const u = store.get("cad_usuario"), s = store.get("cad_senha");
   if(u && s && apiPronta()){
-    sessao = { usuario:u, senha:s, operador:u };
+    sessao = { usuario:u, senha:s, operador:u, admin:false };
     entrarNoApp();
-    carregarLista(true);
+    // registra que voltou ao site e já traz os cadastros
+    api("abrir").then(j => { cadastros = j.cadastros || []; renderLista(); }).catch(() => {});
   }else{
     if(u){ $("#inOperador").value = u; $("#inCodigo").focus(); }
     else $("#inOperador").focus();
