@@ -272,11 +272,25 @@ function apiPronta(){
 // todos os pedidos vão por POST (a senha não aparece na URL)
 async function api(acao, extra){
   // sem cabeçalhos: o navegador envia como texto simples e o Apps Script aceita
-  const r = await fetch(API_URL, {
-    method:"POST",
-    body: JSON.stringify(Object.assign({ acao, usuario:sessao.usuario, senha:sessao.senha }, extra || {}))
-  });
-  const j = await r.json();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 40000); // desiste depois de 40 s
+  let r, texto;
+  try{
+    r = await fetch(API_URL, {
+      method:"POST",
+      body: JSON.stringify(Object.assign({ acao, usuario:sessao.usuario, senha:sessao.senha }, extra || {})),
+      signal: ctrl.signal
+    });
+    texto = await r.text();
+  }catch(e){
+    if(e.name === "AbortError") throw new Error("A planilha demorou demais para responder (mais de 40 s). Tente de novo.");
+    throw new Error("Sem conexão com a planilha. Confira a internet e se o App da Web está publicado para \"Qualquer pessoa\".");
+  }finally{
+    clearTimeout(timer);
+  }
+  let j;
+  try{ j = JSON.parse(texto); }
+  catch(e){ throw new Error("A planilha respondeu algo inesperado (HTTP " + r.status + "). Confira se o App da Web foi publicado com o código novo."); }
   if(!j.ok){
     // usuário removido da aba Operadores ou senha trocada: volta para o login
     if(/usu[aá]rio ou senha/i.test(j.erro || "") && !$("#telaApp").hidden) sair("Seu acesso mudou. Entre de novo.");
