@@ -79,6 +79,11 @@
   .item .who{flex:1;min-width:0}
   .item .who b{display:block;text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .item .who span{font:13px ui-monospace,Menlo,Consolas,monospace;color:var(--accent)}
+  .item .who span{display:block;word-break:break-all}
+  .item .mini{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px}
+  .item .mini em{font-style:normal;font-size:13.5px;word-break:break-all}
+  .item .mini small{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .item summary{align-items:flex-start}
   .item .when{font-size:12.5px;color:var(--muted);text-align:right;white-space:nowrap}
   .item[open] summary{border-bottom:1px solid var(--line);background:#fafaf7}
   .det{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px 16px;padding:14px 16px}
@@ -227,7 +232,7 @@
     <!-- MEUS CADASTROS -->
     <section id="abaLista" hidden>
       <div class="toolbar">
-        <input id="busca" placeholder="Buscar por nome, ID, e-mail, empresa ou CPF">
+        <input id="busca" placeholder="Buscar por nome, e-mail, empresa, CPF, IMEI ou Pix">
         <button class="btn ghost" id="btnAtualizar" type="button">Atualizar</button>
       </div>
       <div class="status" id="statusLista"></div>
@@ -479,7 +484,7 @@ function renderLista(){
   $("#contador").textContent = cadastros.length;
   const q = limpar($("#busca").value.trim());
   const filtrados = !q ? cadastros : cadastros.filter(c =>
-    limpar([c.pessoa, c.id, c.email, c.empresa, c.cpf].join(" ")).includes(q));
+    limpar([c.pessoa, c.id, c.email, c.empresa, c.cpf, c.imei, c.pix].join(" ")).includes(q));
 
   $("#statusLista").textContent = cadastros.length
     ? (q ? `${filtrados.length} de ${cadastros.length} cadastros` : `${cadastros.length} cadastro${cadastros.length > 1 ? "s" : ""} feitos por ${sessao.operador}`)
@@ -498,7 +503,15 @@ function renderLista(){
   $("#lista").innerHTML = filtrados.map(c => `
     <details class="item">
       <summary>
-        <div class="who"><b>${esc(c.pessoa)}</b><span>${esc(c.id)}</span></div>
+        <div class="who">
+          <b>${esc(c.pessoa)}</b>
+          <span>${esc(c.email)}</span>
+          <div class="mini">
+            <em><small>Senha</small>${esc(c.senha) || "—"}</em>
+            <em><small>SR / IMEI</small>${esc(c.imei) || "—"}</em>
+            <em><small>Pix</small>${esc(c.pix) || "—"}</em>
+          </div>
+        </div>
         <div class="when">${esc(c.empresa)}<br>${esc(c.data)}</div>
       </summary>
       <div class="det">
