@@ -141,9 +141,9 @@
         <h1>Cadastro feito ✓</h1>
         <p class="sub" id="resPessoa"></p>
         <dl class="kv">
-          <dt>ID</dt><dd id="resId"></dd><button class="copy" data-copiar="resId">Copiar</button>
           <dt>E-mail</dt><dd id="resEmail"></dd><button class="copy" data-copiar="resEmail">Copiar</button>
           <dt>Senha</dt><dd id="resSenha"></dd><button class="copy" data-copiar="resSenha">Copiar</button>
+          <dt>Pix</dt><dd id="resPix"></dd><button class="copy" data-copiar="resPix">Copiar</button>
         </dl>
         <div class="row-btns">
           <button class="btn" id="btnOutro" type="button">Cadastrar outra pessoa</button>
@@ -435,7 +435,7 @@ $("#formCadastro").addEventListener("submit", async ev => {
   try{
     const res = await apiCadastrar(dados);
     $("#resPessoa").textContent = dados.pessoa + " · " + dados.empresa;
-    $("#resId").textContent = res.id;
+    $("#resPix").textContent = dados.pix || "—";
     $("#resEmail").textContent = res.email;
     $("#resSenha").textContent = res.senha;
     $("#resultado").hidden = false;
