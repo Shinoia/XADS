@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadastro de usuários</title>
+<style>
+  :root{
+    --bg:#f4f3ef; --card:#ffffff; --ink:#1d1f1c; --muted:#6b6f68; --line:#e2e0d8;
+    --accent:#1f5c45; --accent-2:#2c7a5c; --accent-soft:#e3efe8;
+    --danger:#b42318; --danger-soft:#fdecea; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}
+  [hidden]{display:none!important}
+
+  .top{background:var(--ink);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;
+    position:sticky;top:0;z-index:5}
+  .brand{font-weight:700;letter-spacing:.2px}
+  .brand small{display:block;font-weight:400;opacity:.65;font-size:12px}
+  .op{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px}
+  .op b{background:rgba(255,255,255,.12);padding:4px 10px;border-radius:999px;font-weight:600}
+  .link{background:none;border:0;color:#bfe3cf;font:inherit;font-size:13px;cursor:pointer;text-decoration:underline}
+
+  main{max-width:760px;margin:0 auto;padding:18px 14px 80px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  h1{font-size:22px;margin:0 0 4px} h2{font-size:15px;margin:0 0 12px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.6px}
+  p.sub{margin:0 0 18px;color:var(--muted)}
+
+  label{display:block;font-size:13px;font-weight:600;margin:0 0 5px}
+  label .req{color:var(--danger)}
+  input{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;font:inherit;
+    background:#fcfcfa;color:var(--ink)}
+  input:focus{outline:2px solid var(--accent-2);outline-offset:0;border-color:transparent;background:#fff}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid .full{grid-column:1/-1}
+  @media (max-width:560px){.grid{grid-template-columns:1fr}}
+  fieldset{border:0;padding:0;margin:0 0 22px}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:5px;min-height:1em}
+  .hint.ok{color:var(--accent)} .hint.err{color:var(--danger)}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;
+    padding:13px 18px;font:600 15px/1 inherit;font-family:inherit;cursor:pointer;background:var(--accent);color:#fff}
+  .btn:hover{background:var(--accent-2)} .btn:disabled{opacity:.55;cursor:wait}
+  .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+  .btn.ghost:hover{background:var(--accent-soft)}
+  .btn.block{width:100%}
+
+  .tabs{display:flex;gap:6px;background:#e7e5dd;padding:5px;border-radius:12px;margin-bottom:16px}
+  .tabs button{flex:1;border:0;background:transparent;padding:11px;border-radius:9px;font:600 15px inherit;
+    font-family:inherit;color:var(--muted);cursor:pointer}
+  .tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .badge{display:inline-block;min-width:22px;padding:1px 7px;margin-left:6px;border-radius:999px;
+    background:var(--accent-soft);color:var(--accent);font-size:12px}
+
+  .preview{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;background:var(--accent-soft);
+    font-size:14px;margin-bottom:16px}
+  .preview code{font:600 15px ui-monospace,Menlo,Consolas,monospace;color:var(--accent)}
+
+  .msg{padding:12px 14px;border-radius:10px;margin-top:14px;font-size:14px}
+  .msg.err{background:var(--danger-soft);color:var(--danger)}
+
+  .ok-box{border:2px solid var(--accent);background:#f6fbf8}
+  .ok-box h1{color:var(--accent)}
+  .kv{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin:16px 0}
+  .kv dt{font-size:13px;color:var(--muted)} .kv dd{margin:0;font:600 16px ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+  .copy{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+  .copy:hover{background:var(--accent-soft)}
+  .row-btns{display:flex;gap:10px;flex-wrap:wrap}
+
+  .toolbar{display:flex;gap:10px;margin-bottom:12px}
+  .toolbar input{flex:1}
+  .status{color:var(--muted);font-size:14px;margin:6px 2px 12px}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .item summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;gap:12px;align-items:center}
+  .item summary::-webkit-details-marker{display:none}
+  .item .who{flex:1;min-width:0}
+  .item .who b{display:block;text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .who span{font:13px ui-monospace,Menlo,Consolas,monospace;color:var(--accent)}
+  .item .when{font-size:12.5px;color:var(--muted);text-align:right;white-space:nowrap}
+  .item[open] summary{border-bottom:1px solid var(--line);background:#fafaf7}
+  .det{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px 16px;padding:14px 16px}
+  .det div small{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .det div{font-size:14.5px;word-break:break-word}
+  .det .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+  .empty{text-align:center;color:var(--muted);padding:40px 10px}
+
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">Cadastro<small>usuários @hmlbs.id</small></div>
+  <div class="op" id="opBox" hidden>
+    <span>Operador:</span><b id="opNome"></b>
+    <button class="link" id="btnSair" type="button">sair</button>
+  </div>
+</header>
+
+<main>
+  <!-- ENTRADA DO OPERADOR -->
+  <section id="telaEntrada" class="card">
+    <h1>Entrar</h1>
+    <p class="sub">Use o usuário e a senha de operador. Os cadastros que você fizer ficam ligados ao seu usuário.</p>
+    <form id="formEntrada" novalidate>
+      <div class="grid">
+        <div class="full">
+          <label for="inOperador">Usuário <span class="req">*</span></label>
+          <input id="inOperador" autocomplete="username" autocapitalize="off" required>
+        </div>
+        <div class="full">
+          <label for="inCodigo">Senha <span class="req">*</span></label>
+          <input id="inCodigo" type="password" autocomplete="current-password" required>
+        </div>
+      </div>
+      <div style="margin-top:18px"><button class="btn block" id="btnEntrar">Entrar</button></div>
+      <div class="msg err" id="erroEntrada" hidden></div>
+    </form>
+  </section>
+
+  <!-- APP -->
+  <section id="telaApp" hidden>
+    <nav class="tabs">
+      <button type="button" class="on" data-aba="novo">Novo cadastro</button>
+      <button type="button" data-aba="lista">Meus cadastros<span class="badge" id="contador">0</span></button>
+    </nav>
+
+    <!-- NOVO CADASTRO -->
+    <section id="abaNovo">
+      <div id="resultado" class="card ok-box" hidden>
+        <h1>Cadastro feito ✓</h1>
+        <p class="sub" id="resPessoa"></p>
+        <dl class="kv">
+          <dt>ID</dt><dd id="resId"></dd><button class="copy" data-copiar="resId">Copiar</button>
+          <dt>E-mail</dt><dd id="resEmail"></dd><button class="copy" data-copiar="resEmail">Copiar</button>
+          <dt>Senha</dt><dd id="resSenha"></dd><button class="copy" data-copiar="resSenha">Copiar</button>
+        </dl>
+        <div class="row-btns">
+          <button class="btn" id="btnOutro" type="button">Cadastrar outra pessoa</button>
+          <button class="btn ghost" id="btnVerLista" type="button">Ver meus cadastros</button>
+        </div>
+      </div>
+
+      <form id="formCadastro" class="card" novalidate>
+        <div class="preview">Prévia do ID: <code id="prevId">—</code></div>
+
+        <fieldset>
+          <h2>Empresa e usuário</h2>
+          <div class="grid">
+            <div>
+              <label for="f_empresa">Empresa <span class="req">*</span></label>
+              <input id="f_empresa" name="empresa" required>
+            </div>
+            <div>
+              <label for="f_pessoa">Nome do usuário <span class="req">*</span></label>
+              <input id="f_pessoa" name="pessoa" required>
+            </div>
+            <div class="full">
+              <label for="f_imei">IMEI ou SR</label>
+              <input id="f_imei" name="imei" autocapitalize="characters">
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <h2>Documento e banco</h2>
+          <div class="grid">
+            <div>
+              <label for="f_cpf">CPF</label>
+              <input id="f_cpf" name="cpf" inputmode="numeric" placeholder="Só números">
+              <div class="hint" id="hintCpf"></div>
+            </div>
+            <div>
+              <label for="f_banco">Banco</label>
+              <input id="f_banco" name="banco">
+            </div>
+            <div>
+              <label for="f_agencia">Agência</label>
+              <input id="f_agencia" name="agencia" inputmode="numeric">
+            </div>
+            <div>
+              <label for="f_conta">Conta (CC)</label>
+              <input id="f_conta" name="conta">
+            </div>
+            <div class="full">
+              <label for="f_pix">PIX</label>
+              <input id="f_pix" name="pix" autocapitalize="off">
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <h2>Endereço</h2>
+          <div class="grid">
+            <div>
+              <label for="f_cep">CEP</label>
+              <input id="f_cep" name="cep" inputmode="numeric" placeholder="Só números">
+              <div class="hint" id="hintCep"></div>
+            </div>
+            <div>
+              <label for="f_numero">Número (N-C)</label>
+              <input id="f_numero" name="numero" inputmode="numeric">
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <h2>Valor</h2>
+          <div class="grid">
+            <div>
+              <label for="f_valor">$</label>
+              <input id="f_valor" name="valor" inputmode="decimal">
+            </div>
+          </div>
+        </fieldset>
+
+        <button class="btn block" id="btnCadastrar">Cadastrar</button>
+        <div class="msg err" id="erroCadastro" hidden></div>
+      </form>
+    </section>
+
+    <!-- MEUS CADASTROS -->
+    <section id="abaLista" hidden>
+      <div class="toolbar">
+        <input id="busca" placeholder="Buscar por nome, ID, e-mail, empresa ou CPF">
+        <button class="btn ghost" id="btnAtualizar" type="button">Atualizar</button>
+      </div>
+      <div class="status" id="statusLista"></div>
+      <div id="lista"></div>
+    </section>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   CONFIGURAÇÃO: cole aqui a URL do App da Web do Apps Script
+   (termina em /exec)
+   ========================================================= */
+const API_URL = "https://script.google.com/macros/s/AKfycbycPUwwOVIei1wrujomiRZVco3q3WWOko03-lLiGy_TkdeFGcEtIhUVC-yCi-z0OquzWw/exec";
+
+/* ---------- utilidades ---------- */
+const $ = s => document.querySelector(s);
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const limpar = t => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+function toast(msg){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1800);
+}
+async function copiar(texto){
+  try{ await navigator.clipboard.writeText(texto); toast("Copiado"); }
+  catch(e){ toast("Não foi possível copiar"); }
+}
+function mostrarErro(el, msg){ el.textContent = msg; el.hidden = !msg; }
+
+/* ---------- comunicação com a planilha ---------- */
+function apiPronta(){
+  return API_URL && API_URL.startsWith("https://");
+}
+// todos os pedidos vão por POST (a senha não aparece na URL)
+async function api(acao, extra){
+  // sem cabeçalhos: o navegador envia como texto simples e o Apps Script aceita
+  const r = await fetch(API_URL, {
+    method:"POST",
+    body: JSON.stringify(Object.assign({ acao, usuario:sessao.usuario, senha:sessao.senha }, extra || {}))
+  });
+  const j = await r.json();
+  if(!j.ok){
+    // usuário removido da aba Operadores ou senha trocada: volta para o login
+    if(/usu[aá]rio ou senha/i.test(j.erro || "") && !$("#telaApp").hidden) sair("Seu acesso mudou. Entre de novo.");
+    throw new Error(j.erro || "Erro.");
+  }
+  if(j.operador){ sessao.operador = j.operador; $("#opNome").textContent = j.operador; }
+  return j;
+}
+async function apiListar(){
+  return (await api("listar")).cadastros || [];
+}
+async function apiCadastrar(dados){
+  return api("cadastrar", { dados });
+}
+
+/* ---------- sessão do operador ---------- */
+let sessao = { usuario:"", senha:"", operador:"" };
+let cadastros = [];
+
+function entrarNoApp(){
+  $("#opNome").textContent = sessao.operador;
+  $("#opBox").hidden = false;
+  $("#telaEntrada").hidden = true;
+  $("#telaApp").hidden = false;
+  trocarAba("novo");
+  $("#f_empresa").focus();
+}
+
+$("#formEntrada").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const usuario = $("#inOperador").value.trim().replace(/\s+/g," ");
+  const senha = $("#inCodigo").value.trim();
+  const erro = $("#erroEntrada");
+  if(!apiPronta()) return mostrarErro(erro, "O site ainda não foi ligado à planilha (falta a URL do App da Web no index.html).");
+  if(!usuario) return mostrarErro(erro, "Digite seu usuário.");
+  if(!senha) return mostrarErro(erro, "Digite sua senha.");
+  mostrarErro(erro, "");
+  const btn = $("#btnEntrar"); btn.disabled = true; btn.textContent = "Entrando…";
+  sessao = { usuario, senha, operador:usuario };
+  try{
+    cadastros = await apiListar();  // também confere usuário e senha
+    store.set("cad_usuario", usuario); store.set("cad_senha", senha);
+    renderLista();
+    entrarNoApp();
+  }catch(e){
+    mostrarErro(erro, e.message === "Failed to fetch" ? "Sem conexão com a planilha. Confira a internet e a URL do App da Web." : e.message);
+  }finally{
+    btn.disabled = false; btn.textContent = "Entrar";
+  }
+});
+
+function sair(msg){
+  store.del("cad_senha");
+  sessao = { usuario:"", senha:"", operador:"" }; cadastros = [];
+  $("#opBox").hidden = true; $("#telaApp").hidden = true; $("#telaEntrada").hidden = false;
+  $("#inCodigo").value = "";
+  mostrarErro($("#erroEntrada"), msg || "");
+  $("#inCodigo").focus();
+}
+$("#btnSair").addEventListener("click", () => sair());
+
+/* ---------- abas ---------- */
+function trocarAba(nome){
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.aba === nome));
+  $("#abaNovo").hidden = nome !== "novo";
+  $("#abaLista").hidden = nome !== "lista";
+  if(nome === "lista") carregarLista();
+}
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => trocarAba(b.dataset.aba)));
+
+/* ---------- prévia do ID (mesma regra do script) ---------- */
+function previaId(){
+  const chave = limpar($("#f_empresa").value).replace(/[^a-z0-9]/g, "");
+  const partes = limpar($("#f_pessoa").value).replace(/[^a-z ]/g, "").trim().split(/\s+/).filter(Boolean);
+  if(!chave || !partes.length){ $("#prevId").textContent = "—"; return; }
+  let sobrenome = "";
+  for(let k = 1; k < partes.length; k++){ if(partes[k].length > 3){ sobrenome = partes[k]; break; } }
+  $("#prevId").textContent = partes[0] + sobrenome.charAt(0) + chave + "####";
+}
+$("#f_empresa").addEventListener("input", previaId);
+$("#f_pessoa").addEventListener("input", previaId);
+
+/* ---------- CPF ---------- */
+function cpfValido(c){
+  if(!/^\d{11}$/.test(c) || /^(\d)\1{10}$/.test(c)) return false;
+  for(let t = 9; t < 11; t++){
+    let s = 0; for(let i = 0; i < t; i++) s += +c[i] * (t + 1 - i);
+    if(((s * 10) % 11) % 10 !== +c[t]) return false;
+  }
+  return true;
+}
+$("#f_cpf").addEventListener("input", () => {
+  const c = $("#f_cpf").value.replace(/\D/g, ""), h = $("#hintCpf");
+  if(!c){ h.textContent = ""; h.className = "hint"; return; }
+  if(c.length < 11){ h.textContent = c.length + " de 11 dígitos"; h.className = "hint"; return; }
+  const ok = cpfValido(c);
+  h.textContent = ok ? "CPF válido" : "CPF parece inválido (confira os números)";
+  h.className = "hint " + (ok ? "ok" : "err");
+});
+
+/* ---------- CEP: mostra o endereço para conferir ---------- */
+let cepAtual = "";
+$("#f_cep").addEventListener("input", async () => {
+  const c = $("#f_cep").value.replace(/\D/g, ""), h = $("#hintCep");
+  if(c.length !== 8){ cepAtual = ""; h.textContent = c ? c.length + " de 8 dígitos" : ""; h.className = "hint"; return; }
+  if(c === cepAtual) return;
+  cepAtual = c; h.textContent = "Buscando endereço…"; h.className = "hint";
+  try{
+    const r = await fetch("https://brasilapi.com.br/api/cep/v1/" + c);
+    if(c !== cepAtual) return;
+    if(!r.ok) throw 0;
+    const d = await r.json();
+    h.textContent = [d.street, d.neighborhood, d.city && (d.city + " - " + d.state)].filter(Boolean).join(" · ");
+    h.className = "hint ok";
+  }catch(e){
+    if(c !== cepAtual) return;
+    h.textContent = "CEP não encontrado"; h.className = "hint err";
+  }
+});
+
+/* ---------- enviar cadastro ---------- */
+const CAMPOS = ["empresa","pessoa","imei","cpf","banco","agencia","conta","pix","cep","numero","valor"];
+
+$("#formCadastro").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const erro = $("#erroCadastro");
+  const dados = {};
+  CAMPOS.forEach(c => dados[c] = $("#f_" + c).value.trim());
+  dados.cpf = dados.cpf.replace(/\D/g, "");
+  dados.cep = dados.cep.replace(/\D/g, "");
+
+  if(!dados.empresa) return mostrarErro(erro, "Preencha a empresa.");
+  if(!dados.pessoa) return mostrarErro(erro, "Preencha o nome do usuário.");
+  mostrarErro(erro, "");
+
+  const btn = $("#btnCadastrar"); btn.disabled = true; btn.textContent = "Cadastrando…";
+  try{
+    const res = await apiCadastrar(dados);
+    $("#resPessoa").textContent = dados.pessoa + " · " + dados.empresa;
+    $("#resId").textContent = res.id;
+    $("#resEmail").textContent = res.email;
+    $("#resSenha").textContent = res.senha;
+    $("#resultado").hidden = false;
+    $("#formCadastro").hidden = true;
+    window.scrollTo({ top:0, behavior:"smooth" });
+    carregarLista(true);
+  }catch(e){
+    mostrarErro(erro, e.message === "Failed to fetch" ? "Sem conexão com a planilha. Tente de novo." : e.message);
+  }finally{
+    btn.disabled = false; btn.textContent = "Cadastrar";
+  }
+});
+
+document.querySelectorAll("[data-copiar]").forEach(b =>
+  b.addEventListener("click", () => copiar($("#" + b.dataset.copiar).textContent)));
+
+$("#btnOutro").addEventListener("click", () => {
+  // mantém a empresa (normalmente se cadastra várias pessoas da mesma empresa)
+  CAMPOS.filter(c => c !== "empresa").forEach(c => $("#f_" + c).value = "");
+  ["#hintCpf","#hintCep"].forEach(s => { $(s).textContent = ""; $(s).className = "hint"; });
+  cepAtual = "";
+  previaId();
+  $("#resultado").hidden = true;
+  $("#formCadastro").hidden = false;
+  $("#f_pessoa").focus();
+});
+$("#btnVerLista").addEventListener("click", () => trocarAba("lista"));
+
+/* ---------- meus cadastros ---------- */
+let carregando = false;
+async function carregarLista(silencioso){
+  if(carregando) return;
+  carregando = true;
+  if(!silencioso) $("#statusLista").textContent = "Carregando…";
+  try{
+    cadastros = await apiListar();
+    renderLista();
+  }catch(e){
+    $("#statusLista").textContent = "Erro: " + (e.message === "Failed to fetch" ? "sem conexão com a planilha." : e.message);
+  }finally{
+    carregando = false;
+  }
+}
+
+function renderLista(){
+  $("#contador").textContent = cadastros.length;
+  const q = limpar($("#busca").value.trim());
+  const filtrados = !q ? cadastros : cadastros.filter(c =>
+    limpar([c.pessoa, c.id, c.email, c.empresa, c.cpf].join(" ")).includes(q));
+
+  $("#statusLista").textContent = cadastros.length
+    ? (q ? `${filtrados.length} de ${cadastros.length} cadastros` : `${cadastros.length} cadastro${cadastros.length > 1 ? "s" : ""} feitos por ${sessao.operador}`)
+    : "";
+
+  if(!cadastros.length){
+    $("#lista").innerHTML = `<div class="empty">Você ainda não fez nenhum cadastro.</div>`;
+    return;
+  }
+  if(!filtrados.length){
+    $("#lista").innerHTML = `<div class="empty">Nada encontrado para essa busca.</div>`;
+    return;
+  }
+
+  const campo = (rot, val) => `<div><small>${rot}</small>${esc(val) || "—"}</div>`;
+  $("#lista").innerHTML = filtrados.map(c => `
+    <details class="item">
+      <summary>
+        <div class="who"><b>${esc(c.pessoa)}</b><span>${esc(c.id)}</span></div>
+        <div class="when">${esc(c.empresa)}<br>${esc(c.data)}</div>
+      </summary>
+      <div class="det">
+        ${campo("E-mail", c.email)}
+        ${campo("Senha", c.senha)}
+        ${campo("Empresa", c.empresa)}
+        ${campo("IMEI / SR", c.imei)}
+        ${campo("CPF", c.cpf)}
+        ${campo("Banco", c.banco)}
+        ${campo("Agência", c.agencia)}
+        ${campo("Conta", c.conta)}
+        ${campo("Pix", c.pix)}
+        ${campo("CEP", c.cep)}
+        ${campo("Rua", c.rua)}
+        ${campo("Número", c.numero)}
+        ${campo("Bairro", c.bairro)}
+        ${campo("Cidade", c.cidade)}
+        ${campo("$", c.valor)}
+        ${campo("Data / hora", (c.data || "") + " " + (c.hora || ""))}
+        <div class="acts">
+          <button class="copy" data-txt="${esc(c.email)}">Copiar e-mail</button>
+          <button class="copy" data-txt="${esc(c.senha)}">Copiar senha</button>
+          <button class="copy" data-txt="${esc(c.id)}">Copiar ID</button>
+        </div>
+      </div>
+    </details>`).join("");
+}
+$("#busca").addEventListener("input", renderLista);
+$("#btnAtualizar").addEventListener("click", () => carregarLista());
+$("#lista").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-txt]");
+  if(b) copiar(b.dataset.txt);
+});
+
+/* ---------- início ---------- */
+(function iniciar(){
+  const u = store.get("cad_usuario"), s = store.get("cad_senha");
+  if(u && s && apiPronta()){
+    sessao = { usuario:u, senha:s, operador:u };
+    entrarNoApp();
+    carregarLista(true);
+  }else{
+    if(u){ $("#inOperador").value = u; $("#inCodigo").focus(); }
+    else $("#inOperador").focus();
+  }
+})();
+</script>
+</body>
+</html>
