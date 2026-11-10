@@ -3,106 +3,143 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cadastro de usuários</title>
+<title>XADS</title>
 <style>
   :root{
-    --bg:#f4f3ef; --card:#ffffff; --ink:#1d1f1c; --muted:#6b6f68; --line:#e2e0d8;
-    --accent:#1f5c45; --accent-2:#2c7a5c; --accent-soft:#e3efe8;
-    --danger:#b42318; --danger-soft:#fdecea; --radius:14px;
+    --bg:#f5f6fb; --card:#ffffff; --ink:#1b1d2a; --muted:#7a7f95; --line:#eceef5; --field:#f6f7fc;
+    --accent:#5b5bd6; --accent-2:#7b6cf6; --accent-soft:#eef0ff;
+    --ok:#16a34a; --ok-soft:#effcf3; --ok-line:#c9f0d6;
+    --danger:#d92d20; --danger-soft:#fff1f0; --radius:18px;
+    --shadow:0 1px 2px rgba(27,29,42,.04), 0 10px 30px rgba(27,29,42,.06);
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;color:var(--ink);min-height:100vh;
+    font:15.5px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+    background:
+      radial-gradient(900px 420px at 10% -10%, #e9e8ff 0%, transparent 60%),
+      radial-gradient(800px 380px at 100% 0%, #e6f6ff 0%, transparent 55%),
+      var(--bg);
+    background-attachment:fixed}
   [hidden]{display:none!important}
+  button{font-family:inherit}
 
-  .top{background:var(--ink);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;
-    position:sticky;top:0;z-index:5}
-  .brand{font-weight:700;letter-spacing:.2px}
-  .brand small{display:block;font-weight:400;opacity:.65;font-size:12px}
-  .op{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px}
-  .op b{background:rgba(255,255,255,.12);padding:4px 10px;border-radius:999px;font-weight:600}
-  .link{background:none;border:0;color:#bfe3cf;font:inherit;font-size:13px;cursor:pointer;text-decoration:underline}
+  /* ---------- barra do topo ---------- */
+  .top{position:sticky;top:0;z-index:10;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+    padding:14px 20px;background:rgba(255,255,255,.72);backdrop-filter:saturate(1.6) blur(14px);
+    -webkit-backdrop-filter:saturate(1.6) blur(14px);border-bottom:1px solid rgba(27,29,42,.06)}
+  .brand{grid-column:2;font-weight:800;font-size:22px;letter-spacing:.32em;padding-left:.32em;
+    background:linear-gradient(120deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .op{grid-column:3;justify-self:end;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+  .op b{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);color:var(--ink);
+    padding:4px 12px 4px 4px;border-radius:999px;font-weight:600;box-shadow:0 1px 2px rgba(27,29,42,.05)}
+  .op b::before{content:attr(data-ini);display:grid;place-items:center;width:26px;height:26px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-size:12px;text-transform:uppercase}
+  .link{background:none;border:0;color:var(--muted);font-size:13px;cursor:pointer;padding:6px 8px;border-radius:8px}
+  .link:hover{background:var(--accent-soft);color:var(--accent)}
+  @media (max-width:560px){ .op span{display:none} .op{gap:4px} .op b{font-size:0;padding:2px;gap:0} .op b::before{font-size:12px} .brand{font-size:19px} .top{padding:12px 14px} }
 
-  main{max-width:760px;margin:0 auto;padding:18px 14px 80px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
-  h1{font-size:22px;margin:0 0 4px} h2{font-size:15px;margin:0 0 12px;color:var(--muted);
-    text-transform:uppercase;letter-spacing:.6px}
-  p.sub{margin:0 0 18px;color:var(--muted)}
+  /* ---------- base ---------- */
+  main{max-width:760px;margin:0 auto;padding:26px 16px 90px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px;box-shadow:var(--shadow);
+    animation:sobe .35s ease both}
+  @keyframes sobe{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h1{font-size:23px;margin:0 0 4px;letter-spacing:-.2px}
+  h2{font-size:12px;margin:0 0 14px;color:var(--accent);text-transform:uppercase;letter-spacing:1.2px;font-weight:700}
+  p.sub{margin:0 0 22px;color:var(--muted)}
+  #telaEntrada{max-width:420px;margin:7vh auto 0}
 
-  label{display:block;font-size:13px;font-weight:600;margin:0 0 5px}
-  label .req{color:var(--danger)}
-  input{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;font:inherit;
-    background:#fcfcfa;color:var(--ink)}
-  input:focus{outline:2px solid var(--accent-2);outline-offset:0;border-color:transparent;background:#fff}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  label{display:block;font-size:13px;font-weight:600;margin:0 0 6px;color:#3d4152}
+  label .req{color:var(--accent)}
+  input{width:100%;padding:13px 14px;border:1px solid transparent;border-radius:12px;font:inherit;
+    background:var(--field);color:var(--ink);transition:background .15s,border-color .15s,box-shadow .15s}
+  input::placeholder{color:#a6abbd}
+  input:hover{background:#f1f2f9}
+  input:focus{outline:0;background:#fff;border-color:var(--accent);box-shadow:0 0 0 4px rgba(91,91,214,.12)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .grid .full{grid-column:1/-1}
-  @media (max-width:560px){.grid{grid-template-columns:1fr}}
-  fieldset{border:0;padding:0;margin:0 0 22px}
-  .hint{font-size:12.5px;color:var(--muted);margin-top:5px;min-height:1em}
-  .hint.ok{color:var(--accent)} .hint.err{color:var(--danger)}
+  @media (max-width:560px){.grid{grid-template-columns:1fr} .card{padding:20px}}
+  fieldset{border:0;padding:0;margin:0 0 26px}
+  fieldset + fieldset{padding-top:22px;border-top:1px dashed var(--line)}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:6px;min-height:1em}
+  .hint.ok{color:var(--ok)} .hint.err{color:var(--danger)}
 
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;
-    padding:13px 18px;font:600 15px/1 inherit;font-family:inherit;cursor:pointer;background:var(--accent);color:#fff}
-  .btn:hover{background:var(--accent-2)} .btn:disabled{opacity:.55;cursor:wait}
-  .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
-  .btn.ghost:hover{background:var(--accent-soft)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;
+    padding:14px 20px;font-weight:600;font-size:15px;line-height:1;cursor:pointer;color:#fff;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 6px 18px rgba(91,91,214,.28);
+    transition:transform .12s,box-shadow .12s,filter .12s}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(91,91,214,.32)}
+  .btn:active{transform:none}
+  .btn:disabled{opacity:.6;cursor:wait;transform:none}
+  .btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--line);box-shadow:none}
+  .btn.ghost:hover{background:var(--accent-soft);box-shadow:none}
   .btn.block{width:100%}
 
-  .tabs{display:flex;gap:6px;background:#e7e5dd;padding:5px;border-radius:12px;margin-bottom:16px}
-  .tabs button{flex:1;border:0;background:transparent;padding:11px;border-radius:9px;font:600 15px inherit;
-    font-family:inherit;color:var(--muted);cursor:pointer}
-  .tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
-  .badge{display:inline-block;min-width:22px;padding:1px 7px;margin-left:6px;border-radius:999px;
-    background:var(--accent-soft);color:var(--accent);font-size:12px}
+  /* ---------- abas ---------- */
+  .tabs{display:flex;gap:4px;background:rgba(255,255,255,.7);border:1px solid var(--line);padding:5px;border-radius:14px;
+    margin-bottom:18px;box-shadow:0 1px 2px rgba(27,29,42,.04)}
+  .tabs button{flex:1;border:0;background:transparent;padding:11px;border-radius:10px;font-weight:600;font-size:14.5px;
+    color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+  .tabs button:hover{color:var(--ink)}
+  .tabs button.on{background:#fff;color:var(--accent);box-shadow:0 2px 8px rgba(27,29,42,.08)}
+  .badge{display:inline-block;min-width:22px;padding:1px 8px;margin-left:6px;border-radius:999px;
+    background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700}
 
-  .preview{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;background:var(--accent-soft);
-    font-size:14px;margin-bottom:16px}
-  .preview code{font:600 15px ui-monospace,Menlo,Consolas,monospace;color:var(--accent)}
+  .preview{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-radius:12px;
+    background:linear-gradient(135deg,#f3f2ff,#eef7ff);font-size:13.5px;color:var(--muted);margin-bottom:24px}
+  .preview code{font:600 14.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--accent)}
 
-  .msg{padding:12px 14px;border-radius:10px;margin-top:14px;font-size:14px}
+  .msg{padding:12px 14px;border-radius:12px;margin-top:14px;font-size:14px}
   .msg.err{background:var(--danger-soft);color:var(--danger)}
 
-  .ok-box{border:2px solid var(--accent);background:#f6fbf8}
-  .ok-box h1{color:var(--accent)}
-  .kv{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin:16px 0}
-  .kv dt{font-size:13px;color:var(--muted)} .kv dd{margin:0;font:600 16px ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
-  .copy{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
-  .copy:hover{background:var(--accent-soft)}
+  /* ---------- cadastro feito ---------- */
+  .ok-box{border-color:var(--ok-line);background:linear-gradient(180deg,var(--ok-soft),#fff 70%)}
+  .ok-box h1{color:var(--ok);display:flex;align-items:center;gap:10px}
+  .kv{display:grid;grid-template-columns:auto 1fr auto;gap:10px 14px;align-items:center;margin:20px 0 22px;
+    background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .kv dt{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .kv dd{margin:0;font:600 15.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;word-break:break-all}
+  .copy{border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 12px;font-size:13px;color:var(--ink);cursor:pointer;
+    transition:background .15s,border-color .15s,color .15s}
+  .copy:hover{background:var(--accent-soft);border-color:#d9dcff;color:var(--accent)}
   .row-btns{display:flex;gap:10px;flex-wrap:wrap}
 
+  /* ---------- meus cadastros ---------- */
   .toolbar{display:flex;gap:10px;margin-bottom:12px}
-  .toolbar input{flex:1}
-  .status{color:var(--muted);font-size:14px;margin:6px 2px 12px}
-  .item{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
-  .item summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;gap:12px;align-items:center}
+  .toolbar input{flex:1;background:#fff;border-color:var(--line)}
+  .status{color:var(--muted);font-size:13.5px;margin:4px 4px 14px}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:10px;overflow:hidden;
+    box-shadow:0 1px 2px rgba(27,29,42,.04);transition:box-shadow .15s,transform .15s;animation:sobe .3s ease both}
+  .item:hover{box-shadow:var(--shadow)}
+  .item summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;gap:14px;align-items:flex-start}
   .item summary::-webkit-details-marker{display:none}
   .item .who{flex:1;min-width:0}
-  .item .who b{display:block;text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .item .who span{font:13px ui-monospace,Menlo,Consolas,monospace;color:var(--accent)}
-  .item .who span{display:block;word-break:break-all}
-  .item .mini{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px}
-  .item .mini em{font-style:normal;font-size:13.5px;word-break:break-all}
-  .item .mini small{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
-  .item summary{align-items:flex-start}
-  .item .when{font-size:12.5px;color:var(--muted);text-align:right;white-space:nowrap}
-  .item[open] summary{border-bottom:1px solid var(--line);background:#fafaf7}
-  .det{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px 16px;padding:14px 16px}
-  .det div small{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
-  .det div{font-size:14.5px;word-break:break-word}
+  .item .who b{display:block;font-size:15.5px;text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .who span{display:block;font:13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--accent);word-break:break-all;margin-top:2px}
+  .item .mini{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .item .mini em{font-style:normal;font-size:13px;word-break:break-all;background:var(--field);border-radius:9px;padding:5px 10px}
+  .item .mini small{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .item .when{font-size:12px;color:var(--muted);text-align:right;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px}
+  .item[open]{box-shadow:var(--shadow)}
+  .item[open] summary{border-bottom:1px solid var(--line)}
+  .det{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px 18px;padding:16px 18px;background:#fbfbfe}
+  .det div small{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .det div{font-size:14px;word-break:break-word}
   .det .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
-  .empty{text-align:center;color:var(--muted);padding:40px 10px}
+  .empty{text-align:center;color:var(--muted);padding:48px 10px;background:rgba(255,255,255,.6);border:1px dashed var(--line);border-radius:16px}
 
-  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;
-    padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
-  .toast.show{opacity:1}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,8px);background:var(--ink);color:#fff;
+    padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;
+    box-shadow:0 8px 24px rgba(27,29,42,.2)}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
 </head>
 <body>
 
 <header class="top">
-  <div class="brand">Cadastro<small>usuários @hmlbs.id</small></div>
+  <div class="brand">XADS</div>
   <div class="op" id="opBox" hidden>
-    <span>Operador:</span><b id="opNome"></b>
+    <span>Operador</span><b id="opNome"></b>
     <button class="link" id="btnSair" type="button">sair</button>
   </div>
 </header>
@@ -138,7 +175,7 @@
     <!-- NOVO CADASTRO -->
     <section id="abaNovo">
       <div id="resultado" class="card ok-box" hidden>
-        <h1>Cadastro feito ✓</h1>
+        <h1>✓ Cadastro feito</h1>
         <p class="sub" id="resPessoa"></p>
         <dl class="kv">
           <dt>E-mail</dt><dd id="resEmail"></dd><button class="copy" data-copiar="resEmail">Copiar</button>
@@ -301,7 +338,7 @@ async function api(acao, extra){
     if(/usu[aá]rio ou senha/i.test(j.erro || "") && !$("#telaApp").hidden) sair("Seu acesso mudou. Entre de novo.");
     throw new Error(j.erro || "Erro.");
   }
-  if(j.operador){ sessao.operador = j.operador; $("#opNome").textContent = j.operador; }
+  if(j.operador){ sessao.operador = j.operador; mostrarOperador(j.operador); }
   return j;
 }
 async function apiListar(){
@@ -315,8 +352,13 @@ async function apiCadastrar(dados){
 let sessao = { usuario:"", senha:"", operador:"" };
 let cadastros = [];
 
+function mostrarOperador(nome){
+  const el = $("#opNome");
+  el.textContent = nome;
+  el.dataset.ini = String(nome || "?").trim().charAt(0);
+}
 function entrarNoApp(){
-  $("#opNome").textContent = sessao.operador;
+  mostrarOperador(sessao.operador);
   $("#opBox").hidden = false;
   $("#telaEntrada").hidden = true;
   $("#telaApp").hidden = false;
