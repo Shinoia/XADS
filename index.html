@@ -163,6 +163,8 @@
   .det .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
   .por{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:999px;background:rgba(155,123,255,.2);color:#e3dbff;
     font-size:11px;font-weight:600;text-transform:none;letter-spacing:0}
+  .cid{display:inline-flex;align-items:center;gap:4px;margin-top:6px;color:#d9ccff;font-size:11.5px;font-weight:700;letter-spacing:.08em}
+  .cid::before{content:"";width:6px;height:6px;border-radius:50%;background:#c05cff;box-shadow:0 0 8px #c05cff}
   .acessos{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
   .acessos:empty{display:none}
   .acesso{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:14.5px}
@@ -326,7 +328,7 @@
     <!-- MEUS CADASTROS -->
     <section id="abaLista" hidden>
       <div class="toolbar">
-        <input id="busca" placeholder="Buscar por nome, e-mail, empresa, CPF, IMEI ou Pix">
+        <input id="busca" placeholder="Buscar por nome, e-mail, empresa, cidade, CPF, IMEI ou Pix">
         <select id="filtroOp" hidden><option value="">Todos os operadores</option></select>
         <button class="btn ghost" id="btnAtualizar" type="button">Atualizar</button>
       </div>
@@ -654,6 +656,9 @@ async function carregarLista(forcar){
   }
 }
 
+// "Erechim - RS" -> "Erechim"
+function cidadeCurta(c){ return String(c || "").split(" - ")[0].trim(); }
+
 function renderLista(){
   $("#contador").textContent = cadastros.length;
   atualizarFiltroOp();
@@ -661,7 +666,7 @@ function renderLista(){
   const opSel = verTodos() ? $("#filtroOp").value : "";
   const filtrados = cadastros.filter(c =>
     (!opSel || (opSel === "-" ? !c.operador : limpar(c.operador) === opSel)) &&
-    (!q || limpar([c.pessoa, c.id, c.email, c.empresa, c.cpf, c.imei, c.pix, c.operador].join(" ")).includes(q)));
+    (!q || limpar([c.pessoa, c.id, c.email, c.empresa, c.cpf, c.imei, c.pix, c.operador, c.cidade].join(" ")).includes(q)));
 
   const total = cadastros.length, plural = n => n === 1 ? "" : "s";
   $("#statusLista").textContent = !total ? "" :
@@ -692,7 +697,7 @@ function renderLista(){
             <em><small>Pix</small>${esc(c.pix) || "—"}</em>
           </div>
         </div>
-        <div class="when">${esc(c.empresa)}<br>${esc(c.data)}${verTodos() ? `<br><span class="por">${esc(c.operador || "sem operador")}</span>` : ""}</div>
+        <div class="when">${esc(c.empresa)}<br>${esc(c.data)}${verTodos() ? `<br><span class="por">${esc(c.operador || "sem operador")}</span>` : ""}${cidadeCurta(c.cidade) ? `<br><span class="cid">${esc(cidadeCurta(c.cidade))}</span>` : ""}</div>
       </summary>
       <div class="det">
         ${campo("E-mail", c.email)}
