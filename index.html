@@ -380,6 +380,22 @@ async function apiCadastrar(dados){
   return api("cadastrar", { dados });
 }
 
+/* ---------- lista guardada no aparelho (abre na hora) ---------- */
+let ultimaBusca = 0;
+function salvarCache(){
+  if(!sessao.usuario) return;
+  store.set("cad_cache_" + limpar(sessao.usuario), JSON.stringify({ admin:!!sessao.admin, operador:sessao.operador, cadastros }));
+}
+function lerCache(usuario){
+  try{ return JSON.parse(store.get("cad_cache_" + limpar(usuario)) || "null"); }catch(e){ return null; }
+}
+function receberCadastros(lista){
+  cadastros = lista || [];
+  ultimaBusca = Date.now();
+  salvarCache();
+  renderLista();
+}
+
 /* ---------- sessão do operador ---------- */
 let sessao = { usuario:"", senha:"", operador:"", admin:false };
 let cadastros = [];
@@ -420,9 +436,9 @@ $("#formEntrada").addEventListener("submit", async ev => {
   const btn = $("#btnEntrar"); btn.disabled = true; btn.textContent = "Entrando…";
   sessao = { usuario, senha, operador:usuario, admin:false };
   try{
-    cadastros = (await api("entrar")).cadastros || [];  // confere usuário e senha e grava o login no histórico
+    const j = await api("entrar");  // confere usuário e senha e grava o login no histórico
     store.set("cad_usuario", usuario); store.set("cad_senha", senha);
-    renderLista();
+    receberCadastros(j.cadastros);
     entrarNoApp();
   }catch(e){
     mostrarErro(erro, e.message === "Failed to fetch" ? "Sem conexão com a planilha. Confira a internet e a URL do App da Web." : e.message);
@@ -432,6 +448,7 @@ $("#formEntrada").addEventListener("submit", async ev => {
 });
 
 function sair(msg){
+  if(sessao.usuario) store.del("cad_cache_" + limpar(sessao.usuario));
   store.del("cad_senha");
   sessao = { usuario:"", senha:"", operador:"", admin:false }; cadastros = [];
   $("#opBox").hidden = true; $("#telaApp").hidden = true; $("#telaEntrada").hidden = false;
@@ -517,7 +534,7 @@ $("#formCadastro").addEventListener("submit", async ev => {
   if(!dados.pessoa) return mostrarErro(erro, "Preencha o nome do usuário.");
   mostrarErro(erro, "");
 
-  const btn = $("#btnCadastrar"); btn.disabled = true; btn.textContent = "Cadastrando…";
+  const btn = $("#btnCadastrar"); btn.disabled = true; btn.textContent = "Cadastrando… aguarde";
   try{
     const res = await apiCadastrar(dados);
     $("#resPessoa").textContent = dados.pessoa + " · " + dados.empresa;
@@ -527,7 +544,18 @@ $("#formCadastro").addEventListener("submit", async ev => {
     $("#resultado").hidden = false;
     $("#formCadastro").hidden = true;
     window.scrollTo({ top:0, behavior:"smooth" });
-    carregarLista(true);
+    // coloca o cliente novo na lista na hora (sem esperar a planilha)
+    const agora = new Date(), dd = n => String(n).padStart(2, "0");
+    cadastros.unshift({
+      pessoa: dados.pessoa.toLowerCase(), empresa: dados.empresa.toLowerCase(), id: res.id, email: res.email, senha: res.senha,
+      imei: dados.imei.toLowerCase(), pix: dados.pix.toLowerCase(), cpf: dados.cpf, banco: dados.banco.toLowerCase(),
+      agencia: dados.agencia, conta: dados.conta, cep: dados.cep, numero: dados.numero, valor: dados.valor,
+      data: `${dd(agora.getDate())}/${dd(agora.getMonth() + 1)}/${agora.getFullYear()}`,
+      hora: `${dd(agora.getHours())}:${dd(agora.getMinutes())}`, operador: sessao.operador
+    });
+    salvarCache();
+    renderLista();
+    ultimaBusca = 0; // na próxima vez que abrir a lista, busca a versão completa (com endereço)
   }catch(e){
     mostrarErro(erro, e.message === "Failed to fetch" ? "Sem conexão com a planilha. Tente de novo." : e.message);
   }finally{
@@ -552,17 +580,21 @@ $("#btnVerLista").addEventListener("click", () => trocarAba("lista"));
 
 /* ---------- meus cadastros ---------- */
 let carregando = false;
-async function carregarLista(silencioso){
+// mostra na hora o que já tem e atualiza por trás
+async function carregarLista(forcar){
+  renderLista();
   if(carregando) return;
+  if(!forcar && Date.now() - ultimaBusca < 30000) return; // atualizou há menos de 30 s
   carregando = true;
-  if(!silencioso) $("#statusLista").textContent = "Carregando…";
+  $("#btnAtualizar").textContent = "Atualizando…";
+  if(!cadastros.length) $("#statusLista").textContent = "Carregando…";
   try{
-    cadastros = await apiListar();
-    renderLista();
+    receberCadastros(await apiListar());
   }catch(e){
     $("#statusLista").textContent = "Erro: " + (e.message === "Failed to fetch" ? "sem conexão com a planilha." : e.message);
   }finally{
     carregando = false;
+    $("#btnAtualizar").textContent = "Atualizar";
   }
 }
 
@@ -675,7 +707,7 @@ function renderAcessos(){
 }
 $("#filtroAcesso").addEventListener("change", renderAcessos);
 $("#btnAtualizarAcessos").addEventListener("click", carregarAcessos);
-$("#btnAtualizar").addEventListener("click", () => carregarLista());
+$("#btnAtualizar").addEventListener("click", () => carregarLista(true));
 $("#lista").addEventListener("click", ev => {
   const b = ev.target.closest("[data-txt]");
   if(b) copiar(b.dataset.txt);
@@ -685,10 +717,13 @@ $("#lista").addEventListener("click", ev => {
 (function iniciar(){
   const u = store.get("cad_usuario"), s = store.get("cad_senha");
   if(u && s && apiPronta()){
-    sessao = { usuario:u, senha:s, operador:u, admin:false };
+    const cache = lerCache(u);
+    sessao = { usuario:u, senha:s, operador:(cache && cache.operador) || u, admin:!!(cache && cache.admin) };
+    if(cache) cadastros = cache.cadastros || [];
     entrarNoApp();
-    // registra que voltou ao site e já traz os cadastros
-    api("abrir").then(j => { cadastros = j.cadastros || []; renderLista(); }).catch(() => {});
+    aplicarPerfil();
+    // registra que voltou ao site e atualiza a lista por trás
+    api("abrir").then(j => receberCadastros(j.cadastros)).catch(() => {});
   }else{
     if(u){ $("#inOperador").value = u; $("#inCodigo").focus(); }
     else $("#inOperador").focus();
