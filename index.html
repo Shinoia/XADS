@@ -407,7 +407,10 @@ async function api(acao, extra){
     throw new Error(j.erro || "Erro.");
   }
   if(j.operador){ sessao.operador = j.operador; mostrarOperador(j.operador); }
-  if(typeof j.admin === "boolean" && j.admin !== sessao.admin){ sessao.admin = j.admin; aplicarPerfil(); }
+  const cid = j.cidade || "";
+  if((typeof j.admin === "boolean" && j.admin !== sessao.admin) || (j.ok && cid !== (sessao.cidade || ""))){
+    sessao.admin = !!j.admin; sessao.cidade = cid; aplicarPerfil();
+  }
   return j;
 }
 async function apiListar(){
@@ -421,7 +424,7 @@ async function apiCadastrar(dados){
 let ultimaBusca = 0;
 function salvarCache(){
   if(!sessao.usuario) return;
-  store.set("cad_cache_" + limpar(sessao.usuario), JSON.stringify({ admin:!!sessao.admin, operador:sessao.operador, cadastros }));
+  store.set("cad_cache_" + limpar(sessao.usuario), JSON.stringify({ admin:!!sessao.admin, cidade:sessao.cidade || "", operador:sessao.operador, cadastros }));
 }
 function lerCache(usuario){
   try{ return JSON.parse(store.get("cad_cache_" + limpar(usuario)) || "null"); }catch(e){ return null; }
@@ -443,12 +446,15 @@ function mostrarOperador(nome){
   el.dataset.ini = String(nome || "?").trim().charAt(0);
 }
 // administrador vê "Todos os cadastros", filtro por operador e a aba Acessos
+// quem vê cadastros de todos os operadores (administrador ou acesso por cidade)
+function verTodos(){ return !!sessao.admin || !!sessao.cidade; }
+function nomeCidade(){ const c = sessao.cidade || ""; return c.charAt(0).toUpperCase() + c.slice(1); }
 function aplicarPerfil(){
-  const adm = !!sessao.admin;
-  $("#rotLista").textContent = adm ? "Todos os cadastros" : "Meus cadastros";
-  $("#btnVerLista").textContent = adm ? "Ver todos os cadastros" : "Ver meus cadastros";
+  const adm = !!sessao.admin, todos = verTodos();
+  $("#rotLista").textContent = adm ? "Todos os cadastros" : sessao.cidade ? "Cadastros de " + nomeCidade() : "Meus cadastros";
+  $("#btnVerLista").textContent = adm ? "Ver todos os cadastros" : sessao.cidade ? "Ver cadastros de " + nomeCidade() : "Ver meus cadastros";
   $("#tabAcessos").hidden = !adm;
-  $("#filtroOp").hidden = !adm;
+  $("#filtroOp").hidden = !todos;
   if(!adm && !$("#abaAcessos").hidden) trocarAba("novo");
   renderLista();
 }
@@ -584,6 +590,7 @@ $("#formCadastro").addEventListener("submit", async ev => {
     $("#formCadastro").hidden = true;
     window.scrollTo({ top:0, behavior:"smooth" });
     // coloca o cliente novo na lista na hora (sem esperar a planilha)
+    if(!sessao.cidade){
     const agora = new Date(), dd = n => String(n).padStart(2, "0");
     cadastros.unshift({
       pessoa: dados.pessoa.toLowerCase(), empresa: dados.empresa.toLowerCase(), id: res.id, email: res.email, senha: res.senha,
@@ -594,6 +601,7 @@ $("#formCadastro").addEventListener("submit", async ev => {
     });
     salvarCache();
     renderLista();
+    }
     ultimaBusca = 0; // na próxima vez que abrir a lista, busca a versão completa (com endereço)
   }catch(e){
     mostrarErro(erro, e.message === "Failed to fetch" ? "Sem conexão com a planilha. Tente de novo." : e.message);
@@ -641,7 +649,7 @@ function renderLista(){
   $("#contador").textContent = cadastros.length;
   atualizarFiltroOp();
   const q = limpar($("#busca").value.trim());
-  const opSel = sessao.admin ? $("#filtroOp").value : "";
+  const opSel = verTodos() ? $("#filtroOp").value : "";
   const filtrados = cadastros.filter(c =>
     (!opSel || (opSel === "-" ? !c.operador : limpar(c.operador) === opSel)) &&
     (!q || limpar([c.pessoa, c.id, c.email, c.empresa, c.cpf, c.imei, c.pix, c.operador].join(" ")).includes(q)));
@@ -650,6 +658,7 @@ function renderLista(){
   $("#statusLista").textContent = !total ? "" :
     (q || opSel) ? `${filtrados.length} de ${total} cadastros` :
     sessao.admin ? `${total} cadastro${plural(total)} no sistema` :
+    sessao.cidade ? `${total} cadastro${plural(total)} de ${nomeCidade()}` :
     `${total} cadastro${plural(total)} feito${plural(total)} por ${sessao.operador}`;
 
   if(!cadastros.length){
@@ -674,7 +683,7 @@ function renderLista(){
             <em><small>Pix</small>${esc(c.pix) || "—"}</em>
           </div>
         </div>
-        <div class="when">${esc(c.empresa)}<br>${esc(c.data)}${sessao.admin ? `<br><span class="por">${esc(c.operador || "sem operador")}</span>` : ""}</div>
+        <div class="when">${esc(c.empresa)}<br>${esc(c.data)}${verTodos() ? `<br><span class="por">${esc(c.operador || "sem operador")}</span>` : ""}</div>
       </summary>
       <div class="det">
         ${campo("E-mail", c.email)}
@@ -707,7 +716,7 @@ $("#filtroOp").addEventListener("change", renderLista);
 // monta a lista de operadores do filtro (só administrador)
 function atualizarFiltroOp(){
   const sel = $("#filtroOp");
-  if(!sessao.admin) return;
+  if(!verTodos()) return;
   const atual = sel.value;
   const nomes = [...new Set(cadastros.map(c => c.operador).filter(Boolean))].sort((a,b) => a.localeCompare(b));
   const semOp = cadastros.some(c => !c.operador);
@@ -757,7 +766,7 @@ $("#lista").addEventListener("click", ev => {
   const u = store.get("cad_usuario"), s = store.get("cad_senha");
   if(u && s && apiPronta()){
     const cache = lerCache(u);
-    sessao = { usuario:u, senha:s, operador:(cache && cache.operador) || u, admin:!!(cache && cache.admin) };
+    sessao = { usuario:u, senha:s, operador:(cache && cache.operador) || u, admin:!!(cache && cache.admin), cidade:(cache && cache.cidade) || "" };
     if(cache) cadastros = cache.cadastros || [];
     entrarNoApp();
     aplicarPerfil();
