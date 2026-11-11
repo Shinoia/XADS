@@ -447,12 +447,21 @@ function mostrarOperador(nome){
 }
 // administrador vê "Todos os cadastros", filtro por operador e a aba Acessos
 // quem vê cadastros de todos os operadores (administrador ou acesso por cidade)
-function verTodos(){ return !!sessao.admin || !!sessao.cidade; }
-function nomeCidade(){ const c = sessao.cidade || ""; return c.charAt(0).toUpperCase() + c.slice(1); }
+// cidade: "" = só os próprios | "todas" | "Erechim" / "Erechim, Passo Fundo"
+function verTodos(){ return !!sessao.cidade; }
+function todasCidades(){ return limpar(sessao.cidade) === "todas"; }
+function nomeCidade(){
+  return String(sessao.cidade || "").split(/[,;\/]/).map(c => c.trim()).filter(Boolean)
+    .map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(", ");
+}
+function rotuloLista(){
+  return todasCidades() ? "Todos os cadastros" : sessao.cidade ? "Cadastros de " + nomeCidade() : "Meus cadastros";
+}
 function aplicarPerfil(){
   const adm = !!sessao.admin, todos = verTodos();
-  $("#rotLista").textContent = adm ? "Todos os cadastros" : sessao.cidade ? "Cadastros de " + nomeCidade() : "Meus cadastros";
-  $("#btnVerLista").textContent = adm ? "Ver todos os cadastros" : sessao.cidade ? "Ver cadastros de " + nomeCidade() : "Ver meus cadastros";
+  $("#rotLista").textContent = rotuloLista();
+  const rl = rotuloLista();
+  $("#btnVerLista").textContent = "Ver " + rl.charAt(0).toLowerCase() + rl.slice(1);
   $("#tabAcessos").hidden = !adm;
   $("#filtroOp").hidden = !todos;
   if(!adm && !$("#abaAcessos").hidden) trocarAba("novo");
@@ -590,7 +599,7 @@ $("#formCadastro").addEventListener("submit", async ev => {
     $("#formCadastro").hidden = true;
     window.scrollTo({ top:0, behavior:"smooth" });
     // coloca o cliente novo na lista na hora (sem esperar a planilha)
-    if(!sessao.cidade){
+    if(!sessao.cidade || todasCidades()){
     const agora = new Date(), dd = n => String(n).padStart(2, "0");
     cadastros.unshift({
       pessoa: dados.pessoa.toLowerCase(), empresa: dados.empresa.toLowerCase(), id: res.id, email: res.email, senha: res.senha,
@@ -657,7 +666,7 @@ function renderLista(){
   const total = cadastros.length, plural = n => n === 1 ? "" : "s";
   $("#statusLista").textContent = !total ? "" :
     (q || opSel) ? `${filtrados.length} de ${total} cadastros` :
-    sessao.admin ? `${total} cadastro${plural(total)} no sistema` :
+    todasCidades() ? `${total} cadastro${plural(total)} no sistema` :
     sessao.cidade ? `${total} cadastro${plural(total)} de ${nomeCidade()}` :
     `${total} cadastro${plural(total)} feito${plural(total)} por ${sessao.operador}`;
 
