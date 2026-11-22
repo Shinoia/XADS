@@ -270,9 +270,9 @@
   <!-- APP -->
   <section id="telaApp" hidden>
     <nav class="tabs">
-      <button type="button" class="on" data-aba="novo">Novo cadastro</button>
+      <button type="button" class="on" data-aba="novo">Novo Operador</button>
+      <button type="button" data-aba="empresas">Nova empresa</button>
       <button type="button" data-aba="lista"><span id="rotLista">Meus cadastros</span><span class="badge" id="contador">0</span></button>
-      <button type="button" data-aba="empresas">Empresas</button>
       <button type="button" data-aba="acessos" id="tabAcessos" hidden>Acessos</button>
     </nav>
 
@@ -439,11 +439,6 @@
         <div class="msg err" id="erroEmp" hidden></div>
       </form>
 
-      <div class="toolbar lista-emp-topo">
-        <input id="buscaEmp" placeholder="Buscar por apelido, razão social, CNPJ ou cidade">
-      </div>
-      <div class="status" id="statusEmp"></div>
-      <div id="listaEmp"></div>
     </section>
 
     <!-- ACESSOS (só administrador) -->
@@ -572,9 +567,8 @@ function rotuloLista(){
 }
 function aplicarPerfil(){
   const adm = !!sessao.admin, todos = verTodos();
-  $("#rotLista").textContent = rotuloLista();
-  const rl = rotuloLista();
-  $("#btnVerLista").textContent = "Ver " + rl.charAt(0).toLowerCase() + rl.slice(1);
+  $("#rotLista").textContent = "Meus cadastros";
+  $("#btnVerLista").textContent = "Ver meus cadastros";
   $("#tabAcessos").hidden = !adm;
   $("#filtroOp").hidden = !todos;
   if(!adm && !$("#abaAcessos").hidden) trocarAba("novo");
@@ -633,7 +627,7 @@ function trocarAba(nome){
   $("#abaLista").hidden = nome !== "lista";
   $("#abaAcessos").hidden = nome !== "acessos";
   $("#abaEmpresas").hidden = nome !== "empresas";
-  if(nome === "empresas"){ renderListaEmp(); setTimeout(() => { if(!$("#e_cnpj").value) $("#e_cnpj").focus(); }, 50); }
+  if(nome === "empresas"){ setTimeout(() => { if(!$("#e_cnpj").value) $("#e_cnpj").focus(); }, 50); }
   if(nome === "lista") carregarLista();
   if(nome === "acessos") carregarAcessos();
 }
@@ -720,7 +714,6 @@ function receberEmpresas(lista){
   store.set("cad_empresas", JSON.stringify(empresas));
   $("#listaEmpresas").innerHTML = empresas.map(e => `<option value="${esc(e.apelido)}">${esc(e.cnpj || "")}</option>`).join("");
   atualizarEmpresa();
-  if(!$("#abaEmpresas").hidden) renderListaEmp();
 }
 const acharEmpresa = nome => empresas.find(e => chaveEmp(e.apelido) === chaveEmp(nome));
 const acharPorCnpj = c => empresas.find(e => limparCnpj(e.cnpj) === limparCnpj(c));
@@ -1165,46 +1158,11 @@ $("#formEmp").addEventListener("submit", async ev => {
     const j = await api("salvarEmpresa", { empresa: { cnpj, apelido, pessoas: lerPessoasForm() } });
     toast(j.atualizada ? "Empresa atualizada" : "Empresa cadastrada");
     novaEmpresa();
-    renderListaEmp();
-    window.scrollTo({ top: $("#listaEmp").offsetTop - 120, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }catch(e){
     mostrarErro(erro, e.message === "Failed to fetch" ? "Sem conexão com a planilha. Tente de novo." : e.message);
   }finally{
     btn.disabled = false; btn.textContent = editando ? "Salvar alterações" : txt === "Salvar alterações" ? "Salvar empresa" : txt;
-  }
-});
-
-function renderListaEmp(){
-  const q = limpar($("#buscaEmp").value.trim());
-  const lista = [...empresas].reverse().filter(e => !q ||
-    limpar([e.apelido, e.razao, e.fantasia, e.cnpj, limparCnpj(e.cnpj), e.cidade].join(" ")).includes(q));
-  $("#statusEmp").textContent = empresas.length
-    ? (q ? `${lista.length} de ${empresas.length} empresas` : `${empresas.length} empresa${empresas.length === 1 ? "" : "s"} cadastrada${empresas.length === 1 ? "" : "s"}`)
-    : "";
-  if(!empresas.length){ $("#listaEmp").innerHTML = `<div class="empty">Nenhuma empresa cadastrada ainda.</div>`; return; }
-  if(!lista.length){ $("#listaEmp").innerHTML = `<div class="empty">Nada encontrado para essa busca.</div>`; return; }
-  $("#listaEmp").innerHTML = lista.map(e => {
-    const i = empresas.indexOf(e);
-    const ps = (e.pessoas || []).map((p, k) => p && p.nome ? `<span><small>${PAPEIS[k]}</small>${esc(p.nome)}${p.contato ? " · " + esc(p.contato) : ""}${p.valor ? " · " + esc(p.valor) : ""}</span>` : "").join("");
-    return `<div class="emp-item">
-      <div class="topo"><div><h3>${esc(e.apelido)}</h3><div class="razao">${esc(e.razao || "")}</div>
-        <div class="info"><code>${esc(e.cnpj || "")}</code>${e.cidade ? " · " + esc(e.cidade) : ""}</div></div>
-        ${e.situacao ? `<span class="sit ${sitClasse(e.situacao)}">${esc(String(e.situacao).toUpperCase())}</span>` : ""}</div>
-      ${ps ? `<div class="pessoas">${ps}</div>` : ""}
-      <div class="restante">Fica no Novo cadastro: ${usd(restanteDe(e.pessoas))} USD</div>
-      <div class="acts"><button class="copy" data-editar="${i}">Editar pessoas</button><button class="copy" data-usar="${i}">Novo cadastro com essa empresa</button></div>
-    </div>`;
-  }).join("");
-}
-$("#buscaEmp").addEventListener("input", renderListaEmp);
-$("#listaEmp").addEventListener("click", ev => {
-  const ed = ev.target.closest("[data-editar]"), us = ev.target.closest("[data-usar]");
-  if(ed){ editarEmpresa(empresas[+ed.dataset.editar]); window.scrollTo({ top: 0, behavior: "smooth" }); }
-  if(us){
-    const e = empresas[+us.dataset.usar];
-    $("#resultado").hidden = true; $("#formCadastro").hidden = false;
-    $("#f_empresa").value = e.apelido; previaId(); atualizarEmpresa();
-    trocarAba("novo"); $("#f_pessoa").focus();
   }
 });
 
