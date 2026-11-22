@@ -130,6 +130,8 @@
     transition:background .15s,border-color .15s}
   .copy:hover{background:var(--accent-soft);border-color:rgba(155,123,255,.4)}
   .row-btns{display:flex;gap:10px;flex-wrap:wrap}
+  .kv.kv2{grid-template-columns:auto 1fr}
+  .copiar-acesso{grid-column:1/-1;justify-self:stretch;margin-top:6px;padding:11px 14px;font-weight:600;font-size:14px}
   .gerando{color:var(--muted);font-weight:500;animation:pisca 1s ease-in-out infinite}
   @keyframes pisca{50%{opacity:.35}}
   #resultado.salvando{border-color:rgba(155,123,255,.4);background:var(--card)}
@@ -286,10 +288,11 @@
       <div id="resultado" class="card ok-box" hidden>
         <h1 id="tituloResultado">✓ Cadastro <span class="serif" style="color:inherit">feito</span></h1>
         <p class="sub" id="resPessoa"></p>
-        <dl class="kv">
-          <dt>E-mail</dt><dd id="resEmail"></dd><button class="copy" data-copiar="resEmail">Copiar</button>
-          <dt>Senha</dt><dd id="resSenha"></dd><button class="copy" data-copiar="resSenha">Copiar</button>
-          <dt>Pix</dt><dd id="resPix"></dd><button class="copy" data-copiar="resPix">Copiar</button>
+        <dl class="kv kv2">
+          <dt>E-mail</dt><dd id="resEmail"></dd>
+          <dt>Senha</dt><dd id="resSenha"></dd>
+          <dt>Pix</dt><dd id="resPix"></dd>
+          <button class="copy copiar-acesso" type="button" id="btnCopiarAcesso">Copiar e-mail e senha</button>
         </dl>
         <div class="row-btns">
           <button class="btn" id="btnOutro" type="button">Cadastrar outra pessoa</button>
@@ -779,7 +782,7 @@ $("#formCadastro").addEventListener("submit", async ev => {
 
   const btn = $("#btnCadastrar"); btn.disabled = true; btn.textContent = "Cadastrando… aguarde";
   // mostra a tela de resultado NA HORA; só o e-mail espera a planilha
-  const outro = $("#btnOutro"), copiarEmail = document.querySelector('[data-copiar="resEmail"]');
+  const outro = $("#btnOutro"), copiarEmail = $("#btnCopiarAcesso");
   $("#resPessoa").textContent = dados.pessoa + " · " + dados.empresa;
   $("#resPix").textContent = dados.pix || "—";
   $("#resSenha").textContent = SENHA_PADRAO;
@@ -823,6 +826,9 @@ $("#formCadastro").addEventListener("submit", async ev => {
   }
 });
 
+// copia só o e-mail e a senha, uma linha cada
+$("#btnCopiarAcesso").addEventListener("click", () =>
+  copiar(`E-mail: ${$("#resEmail").textContent.trim()}\nSenha: ${$("#resSenha").textContent.trim()}`));
 document.querySelectorAll("[data-copiar]").forEach(b =>
   b.addEventListener("click", () => copiar($("#" + b.dataset.copiar).textContent)));
 
