@@ -130,6 +130,11 @@
     transition:background .15s,border-color .15s}
   .copy:hover{background:var(--accent-soft);border-color:rgba(155,123,255,.4)}
   .row-btns{display:flex;gap:10px;flex-wrap:wrap}
+  .gerando{color:var(--muted);font-weight:500;animation:pisca 1s ease-in-out infinite}
+  @keyframes pisca{50%{opacity:.35}}
+  #resultado.salvando{border-color:rgba(155,123,255,.4);background:var(--card)}
+  #resultado.salvando h1{color:#c4a8ff}
+  .copy:disabled,.btn:disabled{opacity:.5;cursor:wait}
 
   /* ---------- listas ---------- */
   .toolbar{display:flex;gap:10px;margin-bottom:12px}
@@ -279,7 +284,7 @@
     <!-- NOVO CADASTRO -->
     <section id="abaNovo">
       <div id="resultado" class="card ok-box" hidden>
-        <h1>✓ Cadastro <span class="serif" style="color:inherit">feito</span></h1>
+        <h1 id="tituloResultado">✓ Cadastro <span class="serif" style="color:inherit">feito</span></h1>
         <p class="sub" id="resPessoa"></p>
         <dl class="kv">
           <dt>E-mail</dt><dd id="resEmail"></dd><button class="copy" data-copiar="resEmail">Copiar</button>
@@ -687,6 +692,7 @@ $("#f_cep").addEventListener("input", async () => {
 // Cada cadastro de uma empresa tem VALOR_POR_CADASTRO (USD) para dividir:
 // o que sobra depois de Empresário + Inter + Inter vai para o campo "$" do Novo cadastro.
 const VALOR_POR_CADASTRO = 4;
+const SENHA_PADRAO = "humyn#0001"; // mesma senha fixa do script
 // "1,25 USD" -> 1.25 | "1.25" -> 1.25 | "" -> 0 | texto sem número -> NaN
 function lerValor(v){
   let t = String(v || "").trim();
@@ -772,15 +778,24 @@ $("#formCadastro").addEventListener("submit", async ev => {
   mostrarErro(erro, "");
 
   const btn = $("#btnCadastrar"); btn.disabled = true; btn.textContent = "Cadastrando… aguarde";
+  // mostra a tela de resultado NA HORA; só o e-mail espera a planilha
+  const outro = $("#btnOutro"), copiarEmail = document.querySelector('[data-copiar="resEmail"]');
+  $("#resPessoa").textContent = dados.pessoa + " · " + dados.empresa;
+  $("#resPix").textContent = dados.pix || "—";
+  $("#resSenha").textContent = SENHA_PADRAO;
+  $("#resEmail").innerHTML = '<span class="gerando">gerando e-mail…</span>';
+  $("#tituloResultado").innerHTML = 'Salvando <span class="serif" style="color:inherit">cadastro</span>…';
+  $("#resultado").classList.add("salvando");
+  outro.disabled = true; copiarEmail.disabled = true;
+  $("#resultado").hidden = false;
+  $("#formCadastro").hidden = true;
+  window.scrollTo({ top:0, behavior:"smooth" });
   try{
     const res = await apiCadastrar(dados);
-    $("#resPessoa").textContent = dados.pessoa + " · " + dados.empresa;
-    $("#resPix").textContent = dados.pix || "—";
     $("#resEmail").textContent = res.email;
-    $("#resSenha").textContent = res.senha;
-    $("#resultado").hidden = false;
-    $("#formCadastro").hidden = true;
-    window.scrollTo({ top:0, behavior:"smooth" });
+    $("#resSenha").textContent = res.senha || SENHA_PADRAO;
+    $("#tituloResultado").innerHTML = '✓ Cadastro <span class="serif" style="color:inherit">feito</span>';
+    $("#resultado").classList.remove("salvando");
     // coloca o cliente novo na lista na hora (sem esperar a planilha)
     if(!sessao.cidade || todasCidades()){
     const agora = new Date(), dd = n => String(n).padStart(2, "0");
@@ -797,9 +812,14 @@ $("#formCadastro").addEventListener("submit", async ev => {
     }
     ultimaBusca = 0; // na próxima vez que abrir a lista, busca a versão completa (com endereço)
   }catch(e){
+    // deu erro: volta para o formulário com tudo preenchido
+    $("#resultado").hidden = true; $("#resultado").classList.remove("salvando");
+    $("#formCadastro").hidden = false;
     mostrarErro(erro, e.message === "Failed to fetch" ? "Sem conexão com a planilha. Tente de novo." : e.message);
+    erro.scrollIntoView({ behavior:"smooth", block:"center" });
   }finally{
     btn.disabled = false; btn.textContent = "Cadastrar";
+    outro.disabled = false; copiarEmail.disabled = false;
   }
 });
 
