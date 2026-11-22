@@ -176,7 +176,35 @@
   .acesso .sep{color:#5d547f;margin:0 6px}
   .acesso time{font-variant-numeric:tabular-nums;color:var(--soft)}
   .acesso small{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
-  /* ---------- empresa x CNPJ no cadastro ---------- */
+  /* ---------- aba Empresas ---------- */
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important;letter-spacing:.03em}
+  .grid3{display:grid;grid-template-columns:1.6fr 1.2fr .9fr;gap:14px}
+  @media (max-width:640px){.grid3{grid-template-columns:1fr}}
+  .opc{font-size:10px;color:var(--muted);letter-spacing:.1em;margin-left:6px;font-weight:600}
+  #prevEmp:empty{display:none}
+  .prev{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;padding:14px 16px;border-radius:14px;
+    background:rgba(0,0,0,.2);border:1px solid var(--line)}
+  .prev b{display:block;color:#fff;font-size:15px}
+  .prev .linha2{color:var(--muted);font-size:13px;margin-top:3px}
+  .prev.carregando{color:var(--muted);font-size:13.5px}
+  .prev.erro{color:var(--danger);font-size:13.5px}
+  .sit{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;font-size:11.5px;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;border:1px solid;white-space:nowrap}
+  .sit::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+  .sit.ok{color:#4ade80;border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+  .sit.no{color:#ff7a9c;border-color:rgba(255,122,156,.35);background:rgba(255,122,156,.08)}
+  .sit.mid{color:#fbbf24;border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .lista-emp-topo{margin-top:22px}
+  .emp-item{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:10px}
+  .emp-item .topo{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+  .emp-item h3{margin:0;font-size:18px;color:#fff}
+  .emp-item .razao{color:#c4a8ff;font-size:13.5px;margin-top:2px}
+  .emp-item .info{color:var(--muted);font-size:13px;margin-top:6px}
+  .emp-item .info code{font:600 12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#e3dbff}
+  .pessoas{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .pessoas span{font-size:12.5px;background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:10px;padding:6px 10px;color:#e8e2ff}
+  .pessoas small{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+  .emp-item .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
   .emp-hint{margin-top:-6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .emp-hint:empty{display:none}
   .emp-hint .tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
@@ -184,31 +212,6 @@
   .emp-hint .tag.nova{color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3)}
   .emp-hint .link{padding:2px 8px;color:#c4a8ff;text-decoration:underline}
   input[readonly]{opacity:.75;cursor:default}
-  /* ---------- consulta CNPJ ---------- */
-  .cnpj-busca{margin-bottom:16px}
-  .cnpj-busca .toolbar{margin:0}
-  .cnpj-busca #inCnpj{font:600 17px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.04em}
-  .emp{margin-bottom:14px}
-  .emp-topo{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
-  .emp-topo h3{margin:4px 0 2px;font-size:21px;line-height:1.2;letter-spacing:-.01em;color:#fff}
-  .emp-topo .fant{color:#c4a8ff;font-size:14.5px}
-  .emp-topo .num{font:600 14px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--muted);margin-top:6px}
-  .sit{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;
-    letter-spacing:.08em;text-transform:uppercase;border:1px solid;white-space:nowrap}
-  .sit::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
-  .sit.ok{color:#4ade80;border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
-  .sit.no{color:#ff7a9c;border-color:rgba(255,122,156,.35);background:rgba(255,122,156,.08)}
-  .sit.mid{color:#fbbf24;border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
-  .emp h4{margin:0 0 12px;font-size:11px;color:#a993ff;text-transform:uppercase;letter-spacing:.18em}
-  .emp .det{background:transparent;padding:0}
-  .emp .det div{font-size:14.5px}
-  .emp .full{grid-column:1/-1}
-  .emp ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
-  .emp li{display:flex;gap:10px;align-items:baseline;font-size:14px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid var(--line)}
-  .emp li code{font:600 12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#c4a8ff;white-space:nowrap}
-  .emp li small{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
-  .emp-acoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-  .fonte{color:var(--muted);font-size:12px;margin:10px 4px 0}
   .empty{text-align:center;color:var(--muted);padding:48px 10px;background:var(--card-2);border:1px dashed var(--line);border-radius:18px}
 
   .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,8px);background:#fff;color:#1b1433;font-weight:600;
@@ -262,7 +265,7 @@
     <nav class="tabs">
       <button type="button" class="on" data-aba="novo">Novo cadastro</button>
       <button type="button" data-aba="lista"><span id="rotLista">Meus cadastros</span><span class="badge" id="contador">0</span></button>
-      <button type="button" data-aba="cnpj">CNPJ</button>
+      <button type="button" data-aba="empresas">Empresas</button>
       <button type="button" data-aba="acessos" id="tabAcessos" hidden>Acessos</button>
     </nav>
 
@@ -294,8 +297,8 @@
               <datalist id="listaEmpresas"></datalist>
             </div>
             <div>
-              <label for="f_cnpj">CNPJ da empresa <span class="req" id="reqCnpj" hidden>*</span></label>
-              <input id="f_cnpj" name="cnpj" placeholder="00.000.000/0000-00" autocomplete="off" autocapitalize="characters" maxlength="18">
+              <label for="f_cnpj">CNPJ da empresa</label>
+              <input id="f_cnpj" readonly tabindex="-1" placeholder="preenchido pela empresa">
             </div>
             <div class="full hint emp-hint" id="hintEmp"></div>
             <div>
@@ -377,19 +380,61 @@
       <div id="lista"></div>
     </section>
 
-    <!-- CONSULTA CNPJ -->
-    <section id="abaCnpj" hidden>
-      <form id="formCnpj" class="card cnpj-busca" novalidate>
-        <div class="eyebrow">Consulta pública</div>
-        <h1>Dados da <span class="serif">empresa</span></h1>
-        <p class="sub">Digite o CNPJ para ver os dados públicos da Receita Federal.</p>
-        <div class="toolbar">
-          <input id="inCnpj" placeholder="00.000.000/0000-00" autocomplete="off" autocapitalize="characters" maxlength="18">
-          <button class="btn" id="btnCnpj">Consultar</button>
+    <!-- EMPRESAS (CNPJ + apelido + pessoas) -->
+    <section id="abaEmpresas" hidden>
+      <form id="formEmp" class="card" novalidate>
+        <div class="eyebrow" id="emEyebrow">Nova empresa</div>
+        <h1 id="emTitulo">Cadastrar <span class="serif">empresa</span></h1>
+        <p class="sub">Digite o CNPJ e um apelido. Os dados oficiais (endereço, cidade, situação…) vêm da Receita Federal pelo CNPJ.</p>
+        <fieldset>
+          <div class="grid">
+            <div>
+              <label for="e_cnpj">CNPJ <span class="req">*</span></label>
+              <input id="e_cnpj" placeholder="00.000.000/0000-00" autocomplete="off" autocapitalize="characters" maxlength="18" class="mono">
+            </div>
+            <div>
+              <label for="e_apelido">Empresa (apelido) <span class="req">*</span></label>
+              <input id="e_apelido" autocomplete="off" placeholder="Nome usado no Novo cadastro">
+            </div>
+            <div class="full" id="prevEmp"></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <h2>Empresário <small class="opc">opcional</small></h2>
+          <div class="grid3">
+            <div><label for="p0_nome">Nome</label><input id="p0_nome" autocomplete="off"></div>
+            <div><label for="p0_contato">Contato</label><input id="p0_contato" inputmode="tel" placeholder="(00) 00000-0000" autocomplete="off"></div>
+            <div><label for="p0_valor">Valor</label><input id="p0_valor" placeholder="1,25 USD" autocomplete="off"></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <h2>Inter <small class="opc">opcional</small></h2>
+          <div class="grid3">
+            <div><label for="p1_nome">Nome</label><input id="p1_nome" autocomplete="off"></div>
+            <div><label for="p1_contato">Contato</label><input id="p1_contato" inputmode="tel" placeholder="(00) 00000-0000" autocomplete="off"></div>
+            <div><label for="p1_valor">Valor</label><input id="p1_valor" placeholder="1,25 USD" autocomplete="off"></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <h2>Inter <small class="opc">opcional</small></h2>
+          <div class="grid3">
+            <div><label for="p2_nome">Nome</label><input id="p2_nome" autocomplete="off"></div>
+            <div><label for="p2_contato">Contato</label><input id="p2_contato" inputmode="tel" placeholder="(00) 00000-0000" autocomplete="off"></div>
+            <div><label for="p2_valor">Valor</label><input id="p2_valor" placeholder="1,25 USD" autocomplete="off"></div>
+          </div>
+        </fieldset>
+        <div class="row-btns">
+          <button class="btn" id="btnSalvarEmp">Salvar empresa</button>
+          <button class="btn ghost" type="button" id="btnLimparEmp" hidden>Cancelar edição</button>
         </div>
-        <div class="hint" id="hintCnpj"></div>
+        <div class="msg err" id="erroEmp" hidden></div>
       </form>
-      <div id="resCnpj"></div>
+
+      <div class="toolbar lista-emp-topo">
+        <input id="buscaEmp" placeholder="Buscar por apelido, razão social, CNPJ ou cidade">
+      </div>
+      <div class="status" id="statusEmp"></div>
+      <div id="listaEmp"></div>
     </section>
 
     <!-- ACESSOS (só administrador) -->
@@ -578,8 +623,8 @@ function trocarAba(nome){
   $("#abaNovo").hidden = nome !== "novo";
   $("#abaLista").hidden = nome !== "lista";
   $("#abaAcessos").hidden = nome !== "acessos";
-  $("#abaCnpj").hidden = nome !== "cnpj";
-  if(nome === "cnpj") setTimeout(() => $("#inCnpj").focus(), 50);
+  $("#abaEmpresas").hidden = nome !== "empresas";
+  if(nome === "empresas"){ renderListaEmp(); setTimeout(() => { if(!$("#e_cnpj").value) $("#e_cnpj").focus(); }, 50); }
   if(nome === "lista") carregarLista();
   if(nome === "acessos") carregarAcessos();
 }
@@ -635,72 +680,37 @@ $("#f_cep").addEventListener("input", async () => {
   }
 });
 
-/* ---------- empresas (nome -> CNPJ, compartilhado na aba Empresas da planilha) ---------- */
+/* ---------- empresas (apelido -> CNPJ, aba Empresas da planilha) ---------- */
 let empresas = (() => { try{ return JSON.parse(store.get("cad_empresas") || "[]"); }catch(e){ return []; } })();
-let razaoNova = "";          // razão social encontrada para um CNPJ digitado
 const chaveEmp = n => limpar(n).replace(/[^a-z0-9]/g, "");   // "Joe Tech" = "joetech"
 function receberEmpresas(lista){
   if(!Array.isArray(lista)) return;
   empresas = lista;
   store.set("cad_empresas", JSON.stringify(empresas));
-  $("#listaEmpresas").innerHTML = empresas.map(e => `<option value="${esc(e.nome)}">${esc(e.cnpj)}</option>`).join("");
+  $("#listaEmpresas").innerHTML = empresas.map(e => `<option value="${esc(e.apelido)}">${esc(e.cnpj || "")}</option>`).join("");
   atualizarEmpresa();
+  if(!$("#abaEmpresas").hidden) renderListaEmp();
 }
-const acharEmpresa = nome => empresas.find(e => chaveEmp(e.nome) === chaveEmp(nome));
+const acharEmpresa = nome => empresas.find(e => chaveEmp(e.apelido) === chaveEmp(nome));
 const acharPorCnpj = c => empresas.find(e => limparCnpj(e.cnpj) === limparCnpj(c));
 
-// chamado ao digitar a empresa: se já existe, puxa o CNPJ; se é nova, pede o CNPJ
+// Novo cadastro: ao digitar a empresa, puxa o CNPJ se ela estiver cadastrada
 function atualizarEmpresa(){
-  const nome = $("#f_empresa").value.trim(), inC = $("#f_cnpj"), h = $("#hintEmp");
+  const nome = $("#f_empresa").value.trim(), h = $("#hintEmp");
   const emp = nome && acharEmpresa(nome);
-  $("#reqCnpj").hidden = !nome || !!emp;
-  if(emp){
-    inC.value = emp.cnpj; inC.readOnly = true; inC.dataset.auto = "1";
-    h.innerHTML = `<span class="tag ok">✓ Empresa cadastrada</span>${emp.razao ? `<span>${esc(emp.razao)}</span>` : ""}`;
-    return;
-  }
-  if(inC.dataset.auto){ inC.value = ""; delete inC.dataset.auto; razaoNova = ""; }
-  inC.readOnly = false;
+  $("#f_cnpj").value = emp ? (emp.cnpj || "") : "";
   if(!nome){ h.innerHTML = ""; return; }
-  checarCnpjNovo();
-}
-// empresa nova: confere o CNPJ digitado
-let cnpjConsultado = "";
-async function checarCnpjNovo(){
-  const inC = $("#f_cnpj"), h = $("#hintEmp"), c = limparCnpj(inC.value);
-  const nova = `<span class="tag nova">Empresa nova</span>`;
-  if(!c){ h.innerHTML = nova + "<span>Digite o CNPJ — da próxima vez ele aparece sozinho.</span>"; return; }
-  if(c.length < 14){ h.innerHTML = nova + `<span>${c.length} de 14 caracteres</span>`; return; }
-  if(!cnpjValido(c)){ h.innerHTML = nova + `<span style="color:var(--danger)">CNPJ inválido — confira os números</span>`; return; }
-  const dono = acharPorCnpj(c);
-  if(dono){
-    h.innerHTML = `<span style="color:var(--danger)">Esse CNPJ já está cadastrado como <b>${esc(dono.nome)}</b>.</span><button type="button" class="link" id="usarDono">usar "${esc(dono.nome)}"</button>`;
-    $("#usarDono").addEventListener("click", () => { $("#f_empresa").value = dono.nome; previaId(); atualizarEmpresa(); });
-    return;
-  }
-  if(c === cnpjConsultado && razaoNova){ h.innerHTML = nova + `<span>${esc(razaoNova)}</span>`; return; }
-  cnpjConsultado = c; razaoNova = "";
-  h.innerHTML = nova + "<span>Buscando a empresa na Receita…</span>";
-  try{
-    const e = await consultarCnpj(c);
-    if(limparCnpj($("#f_cnpj").value) !== c) return;
-    razaoNova = e.razao || "";
-    const sit = String(e.situacao || "").toUpperCase();
-    h.innerHTML = nova + `<span>${esc(razaoNova)}</span>` + (sit && sit !== "ATIVA" ? `<span style="color:var(--danger)">· ${esc(sit)}</span>` : "");
-  }catch(err){
-    if(limparCnpj($("#f_cnpj").value) !== c) return;
-    h.innerHTML = nova + `<span>CNPJ válido${err.naoAchou ? " (não encontrado na Receita)" : ""}.</span>`;
+  if(emp){
+    h.innerHTML = `<span class="tag ok">✓ Empresa cadastrada</span><span>${esc(emp.razao || "")}${emp.cidade ? " · " + esc(emp.cidade) : ""}</span>`;
+  }else{
+    h.innerHTML = `<span class="tag nova">Sem CNPJ</span><span>Empresa não cadastrada.</span><button type="button" class="link" id="irEmpresas">cadastrar em Empresas</button>`;
+    $("#irEmpresas").addEventListener("click", () => {
+      novaEmpresa(); $("#e_apelido").value = nome; trocarAba("empresas");
+    });
   }
 }
 $("#f_empresa").addEventListener("input", atualizarEmpresa);
 $("#f_empresa").addEventListener("change", atualizarEmpresa);
-$("#f_cnpj").addEventListener("input", () => {
-  const inC = $("#f_cnpj");
-  if(inC.readOnly) return;
-  inC.value = formatarCnpj(inC.value);
-  checarCnpjNovo();
-});
-receberEmpresas(empresas);
 
 /* ---------- enviar cadastro ---------- */
 const CAMPOS = ["empresa","pessoa","imei","cpf","banco","agencia","conta","pix","cep","numero","valor"];
@@ -715,14 +725,7 @@ $("#formCadastro").addEventListener("submit", async ev => {
 
   if(!dados.empresa) return mostrarErro(erro, "Preencha a empresa.");
   const empConhecida = acharEmpresa(dados.empresa);
-  dados.cnpj = empConhecida ? limparCnpj(empConhecida.cnpj) : limparCnpj($("#f_cnpj").value);
-  dados.razao = empConhecida ? "" : razaoNova;
-  if(!empConhecida){
-    if(!dados.cnpj) return mostrarErro(erro, "Empresa nova: preencha o CNPJ da empresa.");
-    if(!cnpjValido(dados.cnpj)) return mostrarErro(erro, "CNPJ da empresa inválido. Confira os números.");
-    const dono = acharPorCnpj(dados.cnpj);
-    if(dono) return mostrarErro(erro, `Esse CNPJ já está cadastrado como "${dono.nome}". Use esse nome na empresa.`);
-  }
+  dados.cnpj = empConhecida ? limparCnpj(empConhecida.cnpj) : "";
   if(!dados.pessoa) return mostrarErro(erro, "Preencha o nome do usuário.");
   mostrarErro(erro, "");
 
@@ -993,112 +996,141 @@ async function consultarCnpj(c){
   }
 }
 
-let empresaAtual = null;
-function textoEmpresa(e){
-  const end = [e.logradouro, e.numero, e.complemento].filter(Boolean).join(", ");
-  const linhas = [
-    ["CNPJ", formatarCnpj(e.cnpj)], ["Razão social", e.razao], ["Nome fantasia", e.fantasia], ["Tipo", e.tipo],
-    ["Situação", [e.situacao, e.dataSituacao && "desde " + dataBR(e.dataSituacao)].filter(Boolean).join(" ")],
-    ["Abertura", dataBR(e.abertura)], ["Natureza jurídica", e.natureza], ["Porte", e.porte], ["Capital social", dinheiro(e.capital)],
-    ["Simples Nacional", simNao(e.simples)], ["MEI", simNao(e.mei)],
-    ["Atividade principal", e.cnae ? `${e.cnae.codigo} - ${e.cnae.descricao}` : ""],
-    ["Endereço", [end, e.bairro, e.cidade && e.cidade + (e.uf ? " - " + e.uf : ""), cepFmt(e.cep)].filter(Boolean).join(" · ")],
-    ["Telefone", e.telefones.join(" / ")], ["E-mail", (e.email || "").toLowerCase()]
-  ].filter(([, v]) => v);
-  let t = linhas.map(([k, v]) => `${k}: ${v}`).join("\n");
-  if(e.cnaes2.length) t += "\n\nAtividades secundárias:\n" + e.cnaes2.map(c => `- ${c.codigo} - ${c.descricao}`).join("\n");
-  if(e.socios.length) t += "\n\nSócios:\n" + e.socios.map(s => `- ${s.nome}${s.qualificacao ? " (" + s.qualificacao + ")" : ""}`).join("\n");
-  return t;
+/* ---------- aba Empresas ---------- */
+let editando = null;   // empresa sendo editada (ou null = nova)
+const telMask = v => { const d = String(v || "").replace(/\D/g, "").slice(0, 11);
+  if(d.length <= 2) return d ? "(" + d : "";
+  const n = d.slice(2);
+  return `(${d.slice(0, 2)}) ` + (n.length > 8 ? n.slice(0, 5) + "-" + n.slice(5) : n.length > 4 ? n.slice(0, 4) + "-" + n.slice(4) : n); };
+const sitClasse = s => { s = String(s || "").toUpperCase(); return s === "ATIVA" ? "ok" : /BAIXADA|NULA|INAPTA/.test(s) ? "no" : "mid"; };
+const PAPEIS = ["Empresário", "Inter", "Inter"];
+
+function lerPessoasForm(){
+  return [0, 1, 2].map(i => ({ nome: $(`#p${i}_nome`).value.trim(), contato: $(`#p${i}_contato`).value.trim(), valor: $(`#p${i}_valor`).value.trim() }));
 }
-function renderEmpresa(e){
+function preencherPessoas(ps){
+  [0, 1, 2].forEach(i => { const p = (ps || [])[i] || {};
+    $(`#p${i}_nome`).value = p.nome || ""; $(`#p${i}_contato`).value = p.contato || ""; $(`#p${i}_valor`).value = p.valor || ""; });
+}
+function previa(e){
+  if(!e) return "";
   const sit = String(e.situacao || "").toUpperCase();
-  const cls = sit === "ATIVA" ? "ok" : /BAIXADA|NULA|INAPTA/.test(sit) ? "no" : "mid";
-  const campo = (rot, val, full) => `<div${full ? ' class="full"' : ""}><small>${rot}</small>${esc(val) || "—"}</div>`;
-  const end = [e.logradouro, e.numero, e.complemento].filter(Boolean).join(", ");
-  $("#resCnpj").innerHTML = `
-    <div class="card emp">
-      <div class="emp-topo">
-        <div>
-          <div class="eyebrow">${esc(e.tipo || "Empresa")}</div>
-          <h3>${esc(e.razao)}</h3>
-          ${e.fantasia ? `<div class="fant">${esc(e.fantasia)}</div>` : ""}
-          <div class="num">${esc(formatarCnpj(e.cnpj))}</div>
-        </div>
-        ${sit ? `<span class="sit ${cls}">${esc(sit)}</span>` : ""}
-      </div>
-    </div>
-    <div class="card emp"><h4>Cadastro</h4><div class="det">
-      ${campo("Situação", [e.situacao, e.dataSituacao && "desde " + dataBR(e.dataSituacao)].filter(Boolean).join(" "))}
-      ${e.motivo && !/SEM MOTIVO/i.test(e.motivo) ? campo("Motivo", e.motivo) : ""}
-      ${campo("Abertura", dataBR(e.abertura))}
-      ${campo("Porte", e.porte)}
-      ${campo("Capital social", dinheiro(e.capital))}
-      ${campo("Simples Nacional", simNao(e.simples))}
-      ${campo("MEI", simNao(e.mei))}
-      ${campo("Natureza jurídica", e.natureza, true)}
-    </div></div>
-    <div class="card emp"><h4>Endereço e contato</h4><div class="det">
-      ${campo("Endereço", end, true)}
-      ${campo("Bairro", e.bairro)}
-      ${campo("Cidade", e.cidade && e.cidade + (e.uf ? " - " + e.uf : ""))}
-      ${campo("CEP", cepFmt(e.cep))}
-      ${campo("Telefone", e.telefones.join(" / "))}
-      ${campo("E-mail", (e.email || "").toLowerCase(), true)}
-    </div></div>
-    <div class="card emp"><h4>Atividades</h4>
-      <ul>
-        ${e.cnae ? `<li><code>${esc(e.cnae.codigo)}</code><span>${esc(e.cnae.descricao)}</span><small>principal</small></li>` : ""}
-        ${e.cnaes2.map(c => `<li><code>${esc(c.codigo)}</code><span>${esc(c.descricao)}</span></li>`).join("")}
-      </ul>
-      ${!e.cnae && !e.cnaes2.length ? `<div class="status">Nenhuma atividade informada.</div>` : ""}
-    </div>
-    <div class="card emp"><h4>Sócios e administradores</h4>
-      ${e.socios.length ? `<ul>${e.socios.map(s => `<li><span><b>${esc(s.nome)}</b>${s.qualificacao ? `<br><span class="status" style="margin:0">${esc(s.qualificacao)}</span>` : ""}</span>${s.desde ? `<small>desde ${esc(dataBR(s.desde))}</small>` : ""}</li>`).join("")}</ul>`
-        : `<div class="status" style="margin:0">Sem sócios informados (comum em MEI e empresário individual).</div>`}
-    </div>
-    <div class="emp-acoes">
-      <button class="btn" type="button" id="btnUsarEmpresa">Usar no cadastro</button>
-      <button class="btn ghost" type="button" id="btnCopiarEmpresa">Copiar dados</button>
-    </div>
-    <div class="fonte">Dados públicos da Receita Federal, via ${esc(e.fonte)}. Podem estar alguns dias desatualizados.</div>`;
-  $("#btnCopiarEmpresa").addEventListener("click", () => copiar(textoEmpresa(e)));
-  $("#btnUsarEmpresa").addEventListener("click", () => {
-    const jaExiste = acharPorCnpj(e.cnpj);
-    $("#f_empresa").value = jaExiste ? jaExiste.nome : (e.fantasia || e.razao || "");
-    $("#f_cnpj").readOnly = false; delete $("#f_cnpj").dataset.auto;
-    $("#f_cnpj").value = formatarCnpj(e.cnpj);
-    razaoNova = e.razao || ""; cnpjConsultado = limparCnpj(e.cnpj);
-    previaId(); atualizarEmpresa();
-    $("#resultado").hidden = true; $("#formCadastro").hidden = false;
-    trocarAba("novo");
-    $("#f_pessoa").focus();
-    toast("Empresa preenchida no cadastro");
-  });
+  return `<div class="prev"><div><b>${esc(e.razao || "")}</b>
+    <div class="linha2">${esc([e.fantasia, e.cidade].filter(Boolean).join(" · "))}</div>
+    ${e.endereco ? `<div class="linha2">${esc(e.endereco)}</div>` : ""}</div>
+    ${sit ? `<span class="sit ${sitClasse(sit)}">${esc(sit)}</span>` : ""}</div>`;
+}
+function novaEmpresa(){
+  editando = null;
+  $("#formEmp").reset();
+  $("#e_apelido").readOnly = false; $("#e_cnpj").readOnly = false;
+  $("#e_apelido").placeholder = "Nome usado no Novo cadastro";
+  $("#prevEmp").innerHTML = "";
+  $("#emEyebrow").textContent = "Nova empresa";
+  $("#emTitulo").innerHTML = 'Cadastrar <span class="serif">empresa</span>';
+  $("#btnSalvarEmp").textContent = "Salvar empresa";
+  $("#btnLimparEmp").hidden = true;
+  mostrarErro($("#erroEmp"), "");
+}
+function editarEmpresa(emp){
+  editando = emp;
+  $("#e_cnpj").value = emp.cnpj || ""; $("#e_cnpj").readOnly = true;
+  $("#e_apelido").value = emp.apelido; $("#e_apelido").readOnly = true;
+  preencherPessoas(emp.pessoas);
+  $("#prevEmp").innerHTML = previa(emp);
+  $("#emEyebrow").textContent = "Empresa cadastrada";
+  $("#emTitulo").innerHTML = `Editar <span class="serif">${esc(emp.apelido)}</span>`;
+  $("#btnSalvarEmp").textContent = "Salvar alterações";
+  $("#btnLimparEmp").hidden = false;
+  mostrarErro($("#erroEmp"), "");
 }
 
-$("#inCnpj").addEventListener("input", () => {
-  const el = $("#inCnpj"), c = limparCnpj(el.value), h = $("#hintCnpj");
+let cnpjPrevia = "";
+async function aoDigitarCnpj(){
+  const el = $("#e_cnpj");
+  if(el.readOnly) return;
+  const c = limparCnpj(el.value);
   el.value = formatarCnpj(c);
-  if(!c){ h.textContent = ""; h.className = "hint"; return; }
-  if(c.length < 14){ h.textContent = c.length + " de 14 caracteres"; h.className = "hint"; return; }
-  const ok = cnpjValido(c);
-  h.textContent = ok ? "CNPJ válido" : "CNPJ inválido (confira os números)";
-  h.className = "hint " + (ok ? "ok" : "err");
-});
-$("#formCnpj").addEventListener("submit", async ev => {
-  ev.preventDefault();
-  const c = limparCnpj($("#inCnpj").value), h = $("#hintCnpj");
-  if(!cnpjValido(c)){ h.textContent = "Digite um CNPJ válido com 14 caracteres."; h.className = "hint err"; return; }
-  const btn = $("#btnCnpj"); btn.disabled = true; btn.textContent = "Consultando…";
-  $("#resCnpj").innerHTML = "";
-  h.textContent = "Buscando na Receita Federal…"; h.className = "hint";
+  const prev = $("#prevEmp");
+  if(c.length < 14){ prev.innerHTML = c ? `<div class="prev carregando">${c.length} de 14 caracteres</div>` : ""; cnpjPrevia = ""; return; }
+  if(!cnpjValido(c)){ prev.innerHTML = `<div class="prev erro">CNPJ inválido — confira os números.</div>`; cnpjPrevia = ""; return; }
+  const ja = acharPorCnpj(c);
+  if(ja){ editarEmpresa(ja); toast("Essa empresa já está cadastrada"); return; }
+  if(c === cnpjPrevia) return;
+  cnpjPrevia = c;
+  prev.innerHTML = `<div class="prev carregando">Buscando na Receita Federal…</div>`;
   try{
-    empresaAtual = await consultarCnpj(c);
-    h.textContent = ""; renderEmpresa(empresaAtual);
+    const e = await consultarCnpj(c);
+    if(limparCnpj($("#e_cnpj").value) !== c) return;
+    const end = [[e.logradouro, e.numero, e.complemento].filter(Boolean).join(", "), e.bairro].filter(Boolean).join(" - ");
+    prev.innerHTML = previa({ razao: e.razao, fantasia: e.fantasia, situacao: e.situacao, endereco: end,
+                              cidade: e.cidade ? e.cidade + (e.uf ? " - " + e.uf : "") : "" });
+    if(!$("#e_apelido").value) $("#e_apelido").placeholder = "ex.: " + (e.fantasia || e.razao || "apelido");
+  }catch(err){
+    if(limparCnpj($("#e_cnpj").value) !== c) return;
+    prev.innerHTML = `<div class="prev erro">${esc(err.message)}</div>`;
+  }
+}
+$("#e_cnpj").addEventListener("input", aoDigitarCnpj);
+[0, 1, 2].forEach(i => $(`#p${i}_contato`).addEventListener("input", ev => { ev.target.value = telMask(ev.target.value); }));
+$("#btnLimparEmp").addEventListener("click", novaEmpresa);
+
+$("#formEmp").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const erro = $("#erroEmp");
+  const cnpj = limparCnpj($("#e_cnpj").value), apelido = $("#e_apelido").value.trim();
+  if(!cnpjValido(cnpj)) return mostrarErro(erro, "Digite um CNPJ válido.");
+  if(!apelido) return mostrarErro(erro, "Digite o apelido da empresa.");
+  if(!editando){
+    const mesmoNome = acharEmpresa(apelido);
+    if(mesmoNome) return mostrarErro(erro, `Já existe uma empresa com o apelido "${mesmoNome.apelido}" (CNPJ ${mesmoNome.cnpj}). Escolha outro apelido.`);
+  }
+  mostrarErro(erro, "");
+  const btn = $("#btnSalvarEmp"), txt = btn.textContent;
+  btn.disabled = true; btn.textContent = "Salvando… aguarde";
+  try{
+    const j = await api("salvarEmpresa", { empresa: { cnpj, apelido, pessoas: lerPessoasForm() } });
+    toast(j.atualizada ? "Empresa atualizada" : "Empresa cadastrada");
+    novaEmpresa();
+    renderListaEmp();
+    window.scrollTo({ top: $("#listaEmp").offsetTop - 120, behavior: "smooth" });
   }catch(e){
-    h.textContent = e.message; h.className = "hint err";
+    mostrarErro(erro, e.message === "Failed to fetch" ? "Sem conexão com a planilha. Tente de novo." : e.message);
   }finally{
-    btn.disabled = false; btn.textContent = "Consultar";
+    btn.disabled = false; btn.textContent = editando ? "Salvar alterações" : txt === "Salvar alterações" ? "Salvar empresa" : txt;
+  }
+});
+
+function renderListaEmp(){
+  const q = limpar($("#buscaEmp").value.trim());
+  const lista = [...empresas].reverse().filter(e => !q ||
+    limpar([e.apelido, e.razao, e.fantasia, e.cnpj, limparCnpj(e.cnpj), e.cidade].join(" ")).includes(q));
+  $("#statusEmp").textContent = empresas.length
+    ? (q ? `${lista.length} de ${empresas.length} empresas` : `${empresas.length} empresa${empresas.length === 1 ? "" : "s"} cadastrada${empresas.length === 1 ? "" : "s"}`)
+    : "";
+  if(!empresas.length){ $("#listaEmp").innerHTML = `<div class="empty">Nenhuma empresa cadastrada ainda.</div>`; return; }
+  if(!lista.length){ $("#listaEmp").innerHTML = `<div class="empty">Nada encontrado para essa busca.</div>`; return; }
+  $("#listaEmp").innerHTML = lista.map(e => {
+    const i = empresas.indexOf(e);
+    const ps = (e.pessoas || []).map((p, k) => p && p.nome ? `<span><small>${PAPEIS[k]}</small>${esc(p.nome)}${p.contato ? " · " + esc(p.contato) : ""}${p.valor ? " · " + esc(p.valor) : ""}</span>` : "").join("");
+    return `<div class="emp-item">
+      <div class="topo"><div><h3>${esc(e.apelido)}</h3><div class="razao">${esc(e.razao || "")}</div>
+        <div class="info"><code>${esc(e.cnpj || "")}</code>${e.cidade ? " · " + esc(e.cidade) : ""}</div></div>
+        ${e.situacao ? `<span class="sit ${sitClasse(e.situacao)}">${esc(String(e.situacao).toUpperCase())}</span>` : ""}</div>
+      ${ps ? `<div class="pessoas">${ps}</div>` : ""}
+      <div class="acts"><button class="copy" data-editar="${i}">Editar pessoas</button><button class="copy" data-usar="${i}">Novo cadastro com essa empresa</button></div>
+    </div>`;
+  }).join("");
+}
+$("#buscaEmp").addEventListener("input", renderListaEmp);
+$("#listaEmp").addEventListener("click", ev => {
+  const ed = ev.target.closest("[data-editar]"), us = ev.target.closest("[data-usar]");
+  if(ed){ editarEmpresa(empresas[+ed.dataset.editar]); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  if(us){
+    const e = empresas[+us.dataset.usar];
+    $("#resultado").hidden = true; $("#formCadastro").hidden = false;
+    $("#f_empresa").value = e.apelido; previaId(); atualizarEmpresa();
+    trocarAba("novo"); $("#f_pessoa").focus();
   }
 });
 
