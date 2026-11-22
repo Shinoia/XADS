@@ -195,6 +195,13 @@
   .sit.no{color:#ff7a9c;border-color:rgba(255,122,156,.35);background:rgba(255,122,156,.08)}
   .sit.mid{color:#fbbf24;border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
   .lista-emp-topo{margin-top:22px}
+  .saldo{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px}
+  .saldo span{flex:1 1 140px;padding:10px 14px;border-radius:12px;background:rgba(0,0,0,.2);border:1px solid var(--line);font-size:15px;color:#fff;font-weight:600}
+  .saldo small{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:2px}
+  .saldo .resta{border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08);color:#4ade80}
+  .saldo.estourou .resta{border-color:rgba(255,122,156,.4);background:rgba(255,122,156,.1);color:#ff7a9c}
+  .saldo .aviso{flex-basis:100%;background:none;border:0;padding:0;font-size:13px;font-weight:500;color:#ff7a9c}
+  .emp-item .restante{display:inline-block;margin-top:8px;font-size:12.5px;color:#4ade80;font-weight:600}
   .emp-item{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:10px}
   .emp-item .topo{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
   .emp-item h3{margin:0;font-size:18px;color:#fff}
@@ -360,6 +367,7 @@
             <div>
               <label for="f_valor">$</label>
               <input id="f_valor" name="valor" inputmode="decimal">
+              <div class="hint" id="hintValor"></div>
             </div>
           </div>
         </fieldset>
@@ -423,6 +431,7 @@
             <div><label for="p2_valor">Valor</label><input id="p2_valor" placeholder="1,25 USD" autocomplete="off"></div>
           </div>
         </fieldset>
+        <div class="saldo" id="saldoEmp"></div>
         <div class="row-btns">
           <button class="btn" id="btnSalvarEmp">Salvar empresa</button>
           <button class="btn ghost" type="button" id="btnLimparEmp" hidden>Cancelar edição</button>
@@ -680,6 +689,28 @@ $("#f_cep").addEventListener("input", async () => {
   }
 });
 
+/* ---------- valor por cadastro ---------- */
+// Cada cadastro de uma empresa tem VALOR_POR_CADASTRO (USD) para dividir:
+// o que sobra depois de Empresário + Inter + Inter vai para o campo "$" do Novo cadastro.
+const VALOR_POR_CADASTRO = 4;
+// "1,25 USD" -> 1.25 | "1.25" -> 1.25 | "" -> 0 | texto sem número -> NaN
+function lerValor(v){
+  let t = String(v || "").trim();
+  if(!t) return 0;
+  t = t.replace(/[^\d,.\-]/g, "");
+  if(!/\d/.test(t)) return NaN;
+  if(t.includes(",") && t.includes(".")) t = t.replace(/\./g, "").replace(",", ".");
+  else t = t.replace(",", ".");
+  const n = parseFloat(t);
+  return isNaN(n) ? NaN : Math.round(n * 100) / 100;
+}
+const usd = n => (Math.round(n * 100) / 100).toFixed(2).replace(".", ",");
+// quanto sobra para o Novo cadastro, a partir das pessoas da empresa
+function restanteDe(pessoas){
+  const gasto = (pessoas || []).reduce((t, p) => t + (lerValor(p && p.valor) || 0), 0);
+  return Math.round((VALOR_POR_CADASTRO - gasto) * 100) / 100;
+}
+
 /* ---------- empresas (apelido -> CNPJ, aba Empresas da planilha) ---------- */
 let empresas = (() => { try{ return JSON.parse(store.get("cad_empresas") || "[]"); }catch(e){ return []; } })();
 const chaveEmp = n => limpar(n).replace(/[^a-z0-9]/g, "");   // "Joe Tech" = "joetech"
@@ -699,6 +730,7 @@ function atualizarEmpresa(){
   const nome = $("#f_empresa").value.trim(), h = $("#hintEmp");
   const emp = nome && acharEmpresa(nome);
   $("#f_cnpj").value = emp ? (emp.cnpj || "") : "";
+  preencherValor(emp);
   if(!nome){ h.innerHTML = ""; return; }
   if(emp){
     h.innerHTML = `<span class="tag ok">✓ Empresa cadastrada</span><span>${esc(emp.razao || "")}${emp.cidade ? " · " + esc(emp.cidade) : ""}</span>`;
@@ -711,6 +743,23 @@ function atualizarEmpresa(){
 }
 $("#f_empresa").addEventListener("input", atualizarEmpresa);
 $("#f_empresa").addEventListener("change", atualizarEmpresa);
+
+// coloca no campo "$" o valor que sobra (4 USD - pessoas). Só troca se o operador não digitou outro valor.
+function preencherValor(emp){
+  const v = $("#f_valor"), h = $("#hintValor");
+  const auto = v.dataset.auto !== undefined;
+  if(emp){
+    const resta = restanteDe(emp.pessoas);
+    if(!v.value.trim() || auto){ v.value = usd(Math.max(resta, 0)); v.dataset.auto = "1"; }
+    const ps = (emp.pessoas || []).map((p, k) => p && lerValor(p.valor) ? `${PAPEIS[k]} ${usd(lerValor(p.valor))}` : "").filter(Boolean);
+    h.textContent = `Restante da empresa: ${usd(resta)} USD (de ${usd(VALOR_POR_CADASTRO)}${ps.length ? " − " + ps.join(" − ") : ""})`;
+    h.className = "hint " + (resta < 0 ? "err" : "ok");
+  }else{
+    if(auto){ v.value = ""; delete v.dataset.auto; }
+    h.textContent = ""; h.className = "hint";
+  }
+}
+$("#f_valor").addEventListener("input", () => { delete $("#f_valor").dataset.auto; });
 
 /* ---------- enviar cadastro ---------- */
 const CAMPOS = ["empresa","pessoa","imei","cpf","banco","agencia","conta","pix","cep","numero","valor"];
@@ -769,7 +818,9 @@ $("#btnOutro").addEventListener("click", () => {
   CAMPOS.filter(c => c !== "empresa").forEach(c => $("#f_" + c).value = "");
   ["#hintCpf","#hintCep"].forEach(s => { $(s).textContent = ""; $(s).className = "hint"; });
   cepAtual = "";
+  delete $("#f_valor").dataset.auto;
   previaId();
+  atualizarEmpresa();
   $("#resultado").hidden = true;
   $("#formCadastro").hidden = false;
   $("#f_pessoa").focus();
@@ -1005,6 +1056,21 @@ const telMask = v => { const d = String(v || "").replace(/\D/g, "").slice(0, 11)
 const sitClasse = s => { s = String(s || "").toUpperCase(); return s === "ATIVA" ? "ok" : /BAIXADA|NULA|INAPTA/.test(s) ? "no" : "mid"; };
 const PAPEIS = ["Empresário", "Inter", "Inter"];
 
+// mostra Total / Pessoas / Restante enquanto o operador digita os valores
+function atualizarSaldo(){
+  const ps = lerPessoasForm();
+  const invalidos = ps.map((p, k) => p.valor && isNaN(lerValor(p.valor)) ? PAPEIS[k] : "").filter(Boolean);
+  const gasto = ps.reduce((t, p) => t + (lerValor(p.valor) || 0), 0);
+  const resta = Math.round((VALOR_POR_CADASTRO - gasto) * 100) / 100;
+  const box = $("#saldoEmp");
+  box.className = "saldo" + (resta < 0 || invalidos.length ? " estourou" : "");
+  box.innerHTML = `<span><small>Por cadastro</small>${usd(VALOR_POR_CADASTRO)} USD</span>
+    <span><small>Pessoas</small>${usd(gasto)} USD</span>
+    <span class="resta"><small>Fica no Novo cadastro</small>${usd(resta)} USD</span>
+    ${resta < 0 ? `<span class="aviso">A soma das pessoas passou de ${usd(VALOR_POR_CADASTRO)} USD.</span>` : ""}
+    ${invalidos.length ? `<span class="aviso">Valor não entendido em: ${invalidos.join(", ")}. Use números, ex.: 1,25 USD.</span>` : ""}`;
+  return { resta, invalidos };
+}
 function lerPessoasForm(){
   return [0, 1, 2].map(i => ({ nome: $(`#p${i}_nome`).value.trim(), contato: $(`#p${i}_contato`).value.trim(), valor: $(`#p${i}_valor`).value.trim() }));
 }
@@ -1031,6 +1097,7 @@ function novaEmpresa(){
   $("#btnSalvarEmp").textContent = "Salvar empresa";
   $("#btnLimparEmp").hidden = true;
   mostrarErro($("#erroEmp"), "");
+  atualizarSaldo();
 }
 function editarEmpresa(emp){
   editando = emp;
@@ -1043,6 +1110,7 @@ function editarEmpresa(emp){
   $("#btnSalvarEmp").textContent = "Salvar alterações";
   $("#btnLimparEmp").hidden = false;
   mostrarErro($("#erroEmp"), "");
+  atualizarSaldo();
 }
 
 let cnpjPrevia = "";
@@ -1073,13 +1141,18 @@ async function aoDigitarCnpj(){
 }
 $("#e_cnpj").addEventListener("input", aoDigitarCnpj);
 [0, 1, 2].forEach(i => $(`#p${i}_contato`).addEventListener("input", ev => { ev.target.value = telMask(ev.target.value); }));
+[0, 1, 2].forEach(i => $(`#p${i}_valor`).addEventListener("input", atualizarSaldo));
 $("#btnLimparEmp").addEventListener("click", novaEmpresa);
+atualizarSaldo();
 
 $("#formEmp").addEventListener("submit", async ev => {
   ev.preventDefault();
   const erro = $("#erroEmp");
   const cnpj = limparCnpj($("#e_cnpj").value), apelido = $("#e_apelido").value.trim();
   if(!cnpjValido(cnpj)) return mostrarErro(erro, "Digite um CNPJ válido.");
+  const saldo = atualizarSaldo();
+  if(saldo.invalidos.length) return mostrarErro(erro, "Confira o valor de: " + saldo.invalidos.join(", ") + ". Use números, ex.: 1,25 USD.");
+  if(saldo.resta < 0) return mostrarErro(erro, `A soma das pessoas passou de ${usd(VALOR_POR_CADASTRO)} USD por cadastro.`);
   if(!apelido) return mostrarErro(erro, "Digite o apelido da empresa.");
   if(!editando){
     const mesmoNome = acharEmpresa(apelido);
@@ -1118,6 +1191,7 @@ function renderListaEmp(){
         <div class="info"><code>${esc(e.cnpj || "")}</code>${e.cidade ? " · " + esc(e.cidade) : ""}</div></div>
         ${e.situacao ? `<span class="sit ${sitClasse(e.situacao)}">${esc(String(e.situacao).toUpperCase())}</span>` : ""}</div>
       ${ps ? `<div class="pessoas">${ps}</div>` : ""}
+      <div class="restante">Fica no Novo cadastro: ${usd(restanteDe(e.pessoas))} USD</div>
       <div class="acts"><button class="copy" data-editar="${i}">Editar pessoas</button><button class="copy" data-usar="${i}">Novo cadastro com essa empresa</button></div>
     </div>`;
   }).join("");
