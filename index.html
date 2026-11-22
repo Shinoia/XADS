@@ -103,7 +103,8 @@
 
   /* ---------- abas ---------- */
   .tabs{display:flex;gap:4px;background:var(--card-2);border:1px solid var(--line);padding:5px;border-radius:16px;margin-bottom:18px}
-  .tabs button{flex:1;border:0;background:transparent;padding:11px;border-radius:12px;font-weight:600;font-size:14px;
+  .tabs{overflow-x:auto;scrollbar-width:none} .tabs::-webkit-scrollbar{display:none}
+  .tabs button{flex:1 0 auto;white-space:nowrap;border:0;background:transparent;padding:11px;border-radius:12px;font-weight:600;font-size:14px;
     color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
   .tabs button:hover{color:#fff}
   .tabs button.on{background:rgba(155,123,255,.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(155,123,255,.35)}
@@ -175,6 +176,39 @@
   .acesso .sep{color:#5d547f;margin:0 6px}
   .acesso time{font-variant-numeric:tabular-nums;color:var(--soft)}
   .acesso small{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+  /* ---------- empresa x CNPJ no cadastro ---------- */
+  .emp-hint{margin-top:-6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .emp-hint:empty{display:none}
+  .emp-hint .tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .emp-hint .tag.ok{color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3)}
+  .emp-hint .tag.nova{color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3)}
+  .emp-hint .link{padding:2px 8px;color:#c4a8ff;text-decoration:underline}
+  input[readonly]{opacity:.75;cursor:default}
+  /* ---------- consulta CNPJ ---------- */
+  .cnpj-busca{margin-bottom:16px}
+  .cnpj-busca .toolbar{margin:0}
+  .cnpj-busca #inCnpj{font:600 17px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.04em}
+  .emp{margin-bottom:14px}
+  .emp-topo{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+  .emp-topo h3{margin:4px 0 2px;font-size:21px;line-height:1.2;letter-spacing:-.01em;color:#fff}
+  .emp-topo .fant{color:#c4a8ff;font-size:14.5px}
+  .emp-topo .num{font:600 14px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--muted);margin-top:6px}
+  .sit{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;border:1px solid;white-space:nowrap}
+  .sit::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+  .sit.ok{color:#4ade80;border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+  .sit.no{color:#ff7a9c;border-color:rgba(255,122,156,.35);background:rgba(255,122,156,.08)}
+  .sit.mid{color:#fbbf24;border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .emp h4{margin:0 0 12px;font-size:11px;color:#a993ff;text-transform:uppercase;letter-spacing:.18em}
+  .emp .det{background:transparent;padding:0}
+  .emp .det div{font-size:14.5px}
+  .emp .full{grid-column:1/-1}
+  .emp ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+  .emp li{display:flex;gap:10px;align-items:baseline;font-size:14px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid var(--line)}
+  .emp li code{font:600 12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#c4a8ff;white-space:nowrap}
+  .emp li small{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+  .emp-acoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .fonte{color:var(--muted);font-size:12px;margin:10px 4px 0}
   .empty{text-align:center;color:var(--muted);padding:48px 10px;background:var(--card-2);border:1px dashed var(--line);border-radius:18px}
 
   .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,8px);background:#fff;color:#1b1433;font-weight:600;
@@ -228,6 +262,7 @@
     <nav class="tabs">
       <button type="button" class="on" data-aba="novo">Novo cadastro</button>
       <button type="button" data-aba="lista"><span id="rotLista">Meus cadastros</span><span class="badge" id="contador">0</span></button>
+      <button type="button" data-aba="cnpj">CNPJ</button>
       <button type="button" data-aba="acessos" id="tabAcessos" hidden>Acessos</button>
     </nav>
 
@@ -255,13 +290,19 @@
           <div class="grid">
             <div>
               <label for="f_empresa">Empresa <span class="req">*</span></label>
-              <input id="f_empresa" name="empresa" required>
+              <input id="f_empresa" name="empresa" list="listaEmpresas" autocomplete="off" required>
+              <datalist id="listaEmpresas"></datalist>
             </div>
+            <div>
+              <label for="f_cnpj">CNPJ da empresa <span class="req" id="reqCnpj" hidden>*</span></label>
+              <input id="f_cnpj" name="cnpj" placeholder="00.000.000/0000-00" autocomplete="off" autocapitalize="characters" maxlength="18">
+            </div>
+            <div class="full hint emp-hint" id="hintEmp"></div>
             <div>
               <label for="f_pessoa">Nome do usuário <span class="req">*</span></label>
               <input id="f_pessoa" name="pessoa" required>
             </div>
-            <div class="full">
+            <div>
               <label for="f_imei">IMEI ou SR</label>
               <input id="f_imei" name="imei" autocapitalize="characters">
             </div>
@@ -334,6 +375,21 @@
       </div>
       <div class="status" id="statusLista"></div>
       <div id="lista"></div>
+    </section>
+
+    <!-- CONSULTA CNPJ -->
+    <section id="abaCnpj" hidden>
+      <form id="formCnpj" class="card cnpj-busca" novalidate>
+        <div class="eyebrow">Consulta pública</div>
+        <h1>Dados da <span class="serif">empresa</span></h1>
+        <p class="sub">Digite o CNPJ para ver os dados públicos da Receita Federal.</p>
+        <div class="toolbar">
+          <input id="inCnpj" placeholder="00.000.000/0000-00" autocomplete="off" autocapitalize="characters" maxlength="18">
+          <button class="btn" id="btnCnpj">Consultar</button>
+        </div>
+        <div class="hint" id="hintCnpj"></div>
+      </form>
+      <div id="resCnpj"></div>
     </section>
 
     <!-- ACESSOS (só administrador) -->
@@ -409,6 +465,7 @@ async function api(acao, extra){
     throw new Error(j.erro || "Erro.");
   }
   if(j.operador){ sessao.operador = j.operador; mostrarOperador(j.operador); }
+  if(j.empresas) receberEmpresas(j.empresas);
   const cid = j.cidade || "";
   if((typeof j.admin === "boolean" && j.admin !== sessao.admin) || (j.ok && cid !== (sessao.cidade || ""))){
     sessao.admin = !!j.admin; sessao.cidade = cid; aplicarPerfil();
@@ -504,6 +561,7 @@ $("#formEntrada").addEventListener("submit", async ev => {
 
 function sair(msg){
   if(sessao.usuario) store.del("cad_cache_" + limpar(sessao.usuario));
+  store.del("cad_empresas");
   store.del("cad_senha");
   sessao = { usuario:"", senha:"", operador:"", admin:false }; cadastros = [];
   $("#opBox").hidden = true; $("#telaApp").hidden = true; $("#telaEntrada").hidden = false;
@@ -520,6 +578,8 @@ function trocarAba(nome){
   $("#abaNovo").hidden = nome !== "novo";
   $("#abaLista").hidden = nome !== "lista";
   $("#abaAcessos").hidden = nome !== "acessos";
+  $("#abaCnpj").hidden = nome !== "cnpj";
+  if(nome === "cnpj") setTimeout(() => $("#inCnpj").focus(), 50);
   if(nome === "lista") carregarLista();
   if(nome === "acessos") carregarAcessos();
 }
@@ -575,6 +635,73 @@ $("#f_cep").addEventListener("input", async () => {
   }
 });
 
+/* ---------- empresas (nome -> CNPJ, compartilhado na aba Empresas da planilha) ---------- */
+let empresas = (() => { try{ return JSON.parse(store.get("cad_empresas") || "[]"); }catch(e){ return []; } })();
+let razaoNova = "";          // razão social encontrada para um CNPJ digitado
+const chaveEmp = n => limpar(n).replace(/[^a-z0-9]/g, "");   // "Joe Tech" = "joetech"
+function receberEmpresas(lista){
+  if(!Array.isArray(lista)) return;
+  empresas = lista;
+  store.set("cad_empresas", JSON.stringify(empresas));
+  $("#listaEmpresas").innerHTML = empresas.map(e => `<option value="${esc(e.nome)}">${esc(e.cnpj)}</option>`).join("");
+  atualizarEmpresa();
+}
+const acharEmpresa = nome => empresas.find(e => chaveEmp(e.nome) === chaveEmp(nome));
+const acharPorCnpj = c => empresas.find(e => limparCnpj(e.cnpj) === limparCnpj(c));
+
+// chamado ao digitar a empresa: se já existe, puxa o CNPJ; se é nova, pede o CNPJ
+function atualizarEmpresa(){
+  const nome = $("#f_empresa").value.trim(), inC = $("#f_cnpj"), h = $("#hintEmp");
+  const emp = nome && acharEmpresa(nome);
+  $("#reqCnpj").hidden = !nome || !!emp;
+  if(emp){
+    inC.value = emp.cnpj; inC.readOnly = true; inC.dataset.auto = "1";
+    h.innerHTML = `<span class="tag ok">✓ Empresa cadastrada</span>${emp.razao ? `<span>${esc(emp.razao)}</span>` : ""}`;
+    return;
+  }
+  if(inC.dataset.auto){ inC.value = ""; delete inC.dataset.auto; razaoNova = ""; }
+  inC.readOnly = false;
+  if(!nome){ h.innerHTML = ""; return; }
+  checarCnpjNovo();
+}
+// empresa nova: confere o CNPJ digitado
+let cnpjConsultado = "";
+async function checarCnpjNovo(){
+  const inC = $("#f_cnpj"), h = $("#hintEmp"), c = limparCnpj(inC.value);
+  const nova = `<span class="tag nova">Empresa nova</span>`;
+  if(!c){ h.innerHTML = nova + "<span>Digite o CNPJ — da próxima vez ele aparece sozinho.</span>"; return; }
+  if(c.length < 14){ h.innerHTML = nova + `<span>${c.length} de 14 caracteres</span>`; return; }
+  if(!cnpjValido(c)){ h.innerHTML = nova + `<span style="color:var(--danger)">CNPJ inválido — confira os números</span>`; return; }
+  const dono = acharPorCnpj(c);
+  if(dono){
+    h.innerHTML = `<span style="color:var(--danger)">Esse CNPJ já está cadastrado como <b>${esc(dono.nome)}</b>.</span><button type="button" class="link" id="usarDono">usar "${esc(dono.nome)}"</button>`;
+    $("#usarDono").addEventListener("click", () => { $("#f_empresa").value = dono.nome; previaId(); atualizarEmpresa(); });
+    return;
+  }
+  if(c === cnpjConsultado && razaoNova){ h.innerHTML = nova + `<span>${esc(razaoNova)}</span>`; return; }
+  cnpjConsultado = c; razaoNova = "";
+  h.innerHTML = nova + "<span>Buscando a empresa na Receita…</span>";
+  try{
+    const e = await consultarCnpj(c);
+    if(limparCnpj($("#f_cnpj").value) !== c) return;
+    razaoNova = e.razao || "";
+    const sit = String(e.situacao || "").toUpperCase();
+    h.innerHTML = nova + `<span>${esc(razaoNova)}</span>` + (sit && sit !== "ATIVA" ? `<span style="color:var(--danger)">· ${esc(sit)}</span>` : "");
+  }catch(err){
+    if(limparCnpj($("#f_cnpj").value) !== c) return;
+    h.innerHTML = nova + `<span>CNPJ válido${err.naoAchou ? " (não encontrado na Receita)" : ""}.</span>`;
+  }
+}
+$("#f_empresa").addEventListener("input", atualizarEmpresa);
+$("#f_empresa").addEventListener("change", atualizarEmpresa);
+$("#f_cnpj").addEventListener("input", () => {
+  const inC = $("#f_cnpj");
+  if(inC.readOnly) return;
+  inC.value = formatarCnpj(inC.value);
+  checarCnpjNovo();
+});
+receberEmpresas(empresas);
+
 /* ---------- enviar cadastro ---------- */
 const CAMPOS = ["empresa","pessoa","imei","cpf","banco","agencia","conta","pix","cep","numero","valor"];
 
@@ -587,6 +714,15 @@ $("#formCadastro").addEventListener("submit", async ev => {
   dados.cep = dados.cep.replace(/\D/g, "");
 
   if(!dados.empresa) return mostrarErro(erro, "Preencha a empresa.");
+  const empConhecida = acharEmpresa(dados.empresa);
+  dados.cnpj = empConhecida ? limparCnpj(empConhecida.cnpj) : limparCnpj($("#f_cnpj").value);
+  dados.razao = empConhecida ? "" : razaoNova;
+  if(!empConhecida){
+    if(!dados.cnpj) return mostrarErro(erro, "Empresa nova: preencha o CNPJ da empresa.");
+    if(!cnpjValido(dados.cnpj)) return mostrarErro(erro, "CNPJ da empresa inválido. Confira os números.");
+    const dono = acharPorCnpj(dados.cnpj);
+    if(dono) return mostrarErro(erro, `Esse CNPJ já está cadastrado como "${dono.nome}". Use esse nome na empresa.`);
+  }
   if(!dados.pessoa) return mostrarErro(erro, "Preencha o nome do usuário.");
   mostrarErro(erro, "");
 
@@ -607,6 +743,7 @@ $("#formCadastro").addEventListener("submit", async ev => {
       pessoa: dados.pessoa.toLowerCase(), empresa: dados.empresa.toLowerCase(), id: res.id, email: res.email, senha: res.senha,
       imei: dados.imei.toLowerCase(), pix: dados.pix.toLowerCase(), cpf: dados.cpf, banco: dados.banco.toLowerCase(),
       agencia: dados.agencia, conta: dados.conta, cep: dados.cep, numero: dados.numero, valor: dados.valor,
+      cnpj: formatarCnpj(dados.cnpj),
       data: `${dd(agora.getDate())}/${dd(agora.getMonth() + 1)}/${agora.getFullYear()}`,
       hora: `${dd(agora.getHours())}:${dd(agora.getMinutes())}`, operador: sessao.operador
     });
@@ -703,6 +840,7 @@ function renderLista(){
         ${campo("E-mail", c.email)}
         ${campo("Senha", c.senha)}
         ${campo("Empresa", c.empresa)}
+        ${campo("CNPJ empresa", c.cnpj)}
         ${campo("IMEI / SR", c.imei)}
         ${campo("CPF", c.cpf)}
         ${campo("Banco", c.banco)}
@@ -773,6 +911,195 @@ $("#btnAtualizar").addEventListener("click", () => carregarLista(true));
 $("#lista").addEventListener("click", ev => {
   const b = ev.target.closest("[data-txt]");
   if(b) copiar(b.dataset.txt);
+});
+
+/* ---------- consulta CNPJ (dados públicos da Receita Federal) ---------- */
+// aceita o CNPJ numérico e o novo CNPJ alfanumérico (letras nas 12 primeiras posições)
+function limparCnpj(v){ return String(v || "").toUpperCase().replace(/[^0-9A-Z]/g, "").slice(0, 14); }
+function formatarCnpj(c){
+  c = limparCnpj(c);
+  return c.replace(/^(\w{2})(\w{0,3})(\w{0,3})(\w{0,4})(\w{0,2}).*/, (m, a, b, d, e, f) =>
+    a + (b ? "." + b : "") + (d ? "." + d : "") + (e ? "/" + e : "") + (f ? "-" + f : ""));
+}
+function cnpjValido(c){
+  c = limparCnpj(c);
+  if(!/^[0-9A-Z]{12}[0-9]{2}$/.test(c) || /^(.)\1{13}$/.test(c)) return false;
+  const val = ch => ch.charCodeAt(0) - 48;
+  const dv = n => {
+    const pesos = n === 12 ? [5,4,3,2,9,8,7,6,5,4,3,2] : [6,5,4,3,2,9,8,7,6,5,4,3,2];
+    let soma = 0; for(let i = 0; i < n; i++) soma += val(c[i]) * pesos[i];
+    const r = soma % 11; return r < 2 ? 0 : 11 - r;
+  };
+  return dv(12) === +c[12] && dv(13) === +c[13];
+}
+const dataBR = d => { const m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : (d || ""); };
+const dinheiro = v => (v === "" || v == null || isNaN(+v)) ? "" : (+v).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+const telefone = t => { t = String(t || "").replace(/\D/g, ""); if(!t) return ""; const d = t.slice(0, 2), n = t.slice(2);
+  return `(${d}) ` + (n.length > 8 ? n.slice(0, 5) + "-" + n.slice(5) : n.slice(0, 4) + "-" + n.slice(4)); };
+const cepFmt = c => { c = String(c || "").replace(/\D/g, ""); return c.length === 8 ? c.slice(0, 5) + "-" + c.slice(5) : c; };
+const simNao = v => v === true ? "Sim" : v === false ? "Não" : "";
+
+async function buscarJson(url){
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 15000);
+  try{
+    const r = await fetch(url, { signal: ctrl.signal });
+    if(r.status === 404) { const e = new Error("CNPJ não encontrado na Receita Federal."); e.naoAchou = true; throw e; }
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    return await r.json();
+  }finally{ clearTimeout(t); }
+}
+// BrasilAPI -> formato único
+function deBrasilApi(j){
+  return {
+    fonte: "BrasilAPI", cnpj: j.cnpj, razao: j.razao_social, fantasia: j.nome_fantasia,
+    tipo: j.identificador_matriz_filial === 2 ? "Filial" : j.identificador_matriz_filial === 1 ? "Matriz" : (j.descricao_identificador_matriz_filial || ""),
+    situacao: j.descricao_situacao_cadastral, dataSituacao: j.data_situacao_cadastral, motivo: j.descricao_motivo_situacao_cadastral,
+    abertura: j.data_inicio_atividade, natureza: j.natureza_juridica, porte: j.porte || j.descricao_porte, capital: j.capital_social,
+    simples: j.opcao_pelo_simples, mei: j.opcao_pelo_mei,
+    cnae: j.cnae_fiscal ? { codigo: j.cnae_fiscal, descricao: j.cnae_fiscal_descricao } : null,
+    cnaes2: (j.cnaes_secundarios || []).filter(c => c && c.codigo).map(c => ({ codigo: c.codigo, descricao: c.descricao })),
+    logradouro: [j.descricao_tipo_de_logradouro, j.logradouro].filter(Boolean).join(" "), numero: j.numero, complemento: j.complemento,
+    bairro: j.bairro, cidade: j.municipio, uf: j.uf, cep: j.cep,
+    telefones: [j.ddd_telefone_1, j.ddd_telefone_2].map(telefone).filter(Boolean), email: j.email,
+    socios: (j.qsa || []).map(s => ({ nome: s.nome_socio, qualificacao: s.qualificacao_socio, desde: s.data_entrada_sociedade, faixa: s.faixa_etaria }))
+  };
+}
+// CNPJ.ws -> formato único (usado se a BrasilAPI falhar)
+function deCnpjWs(j){
+  const e = j.estabelecimento || {}, sim = j.simples || {};
+  const sn = v => v === "Sim" || v === "S" ? true : v === "Não" || v === "N" ? false : undefined;
+  return {
+    fonte: "CNPJ.ws", cnpj: e.cnpj, razao: j.razao_social, fantasia: e.nome_fantasia, tipo: e.tipo,
+    situacao: e.situacao_cadastral, dataSituacao: e.data_situacao_cadastral, motivo: (e.motivo_situacao_cadastral || {}).descricao,
+    abertura: e.data_inicio_atividade, natureza: (j.natureza_juridica || {}).descricao, porte: (j.porte || {}).descricao,
+    capital: j.capital_social, simples: sn(sim.simples), mei: sn(sim.mei),
+    cnae: e.atividade_principal ? { codigo: e.atividade_principal.id || e.atividade_principal.subclasse, descricao: e.atividade_principal.descricao } : null,
+    cnaes2: (e.atividades_secundarias || []).map(c => ({ codigo: c.id || c.subclasse, descricao: c.descricao })),
+    logradouro: [e.tipo_logradouro, e.logradouro].filter(Boolean).join(" "), numero: e.numero, complemento: e.complemento,
+    bairro: e.bairro, cidade: (e.cidade || {}).nome, uf: (e.estado || {}).sigla, cep: e.cep,
+    telefones: [[e.ddd1, e.telefone1], [e.ddd2, e.telefone2]].map(([d, t]) => telefone((d || "") + (t || ""))).filter(Boolean), email: e.email,
+    socios: (j.socios || []).map(s => ({ nome: s.nome, qualificacao: (s.qualificacao_socio || {}).descricao, desde: s.data_entrada, faixa: s.faixa_etaria }))
+  };
+}
+async function consultarCnpj(c){
+  try{ return deBrasilApi(await buscarJson("https://brasilapi.com.br/api/cnpj/v1/" + c)); }
+  catch(e1){
+    if(e1.naoAchou) throw e1;
+    try{ return deCnpjWs(await buscarJson("https://publica.cnpj.ws/cnpj/" + c)); }
+    catch(e2){
+      if(e2.naoAchou) throw e2;
+      throw new Error("Os serviços de consulta não responderam agora. Tente de novo em 1 minuto.");
+    }
+  }
+}
+
+let empresaAtual = null;
+function textoEmpresa(e){
+  const end = [e.logradouro, e.numero, e.complemento].filter(Boolean).join(", ");
+  const linhas = [
+    ["CNPJ", formatarCnpj(e.cnpj)], ["Razão social", e.razao], ["Nome fantasia", e.fantasia], ["Tipo", e.tipo],
+    ["Situação", [e.situacao, e.dataSituacao && "desde " + dataBR(e.dataSituacao)].filter(Boolean).join(" ")],
+    ["Abertura", dataBR(e.abertura)], ["Natureza jurídica", e.natureza], ["Porte", e.porte], ["Capital social", dinheiro(e.capital)],
+    ["Simples Nacional", simNao(e.simples)], ["MEI", simNao(e.mei)],
+    ["Atividade principal", e.cnae ? `${e.cnae.codigo} - ${e.cnae.descricao}` : ""],
+    ["Endereço", [end, e.bairro, e.cidade && e.cidade + (e.uf ? " - " + e.uf : ""), cepFmt(e.cep)].filter(Boolean).join(" · ")],
+    ["Telefone", e.telefones.join(" / ")], ["E-mail", (e.email || "").toLowerCase()]
+  ].filter(([, v]) => v);
+  let t = linhas.map(([k, v]) => `${k}: ${v}`).join("\n");
+  if(e.cnaes2.length) t += "\n\nAtividades secundárias:\n" + e.cnaes2.map(c => `- ${c.codigo} - ${c.descricao}`).join("\n");
+  if(e.socios.length) t += "\n\nSócios:\n" + e.socios.map(s => `- ${s.nome}${s.qualificacao ? " (" + s.qualificacao + ")" : ""}`).join("\n");
+  return t;
+}
+function renderEmpresa(e){
+  const sit = String(e.situacao || "").toUpperCase();
+  const cls = sit === "ATIVA" ? "ok" : /BAIXADA|NULA|INAPTA/.test(sit) ? "no" : "mid";
+  const campo = (rot, val, full) => `<div${full ? ' class="full"' : ""}><small>${rot}</small>${esc(val) || "—"}</div>`;
+  const end = [e.logradouro, e.numero, e.complemento].filter(Boolean).join(", ");
+  $("#resCnpj").innerHTML = `
+    <div class="card emp">
+      <div class="emp-topo">
+        <div>
+          <div class="eyebrow">${esc(e.tipo || "Empresa")}</div>
+          <h3>${esc(e.razao)}</h3>
+          ${e.fantasia ? `<div class="fant">${esc(e.fantasia)}</div>` : ""}
+          <div class="num">${esc(formatarCnpj(e.cnpj))}</div>
+        </div>
+        ${sit ? `<span class="sit ${cls}">${esc(sit)}</span>` : ""}
+      </div>
+    </div>
+    <div class="card emp"><h4>Cadastro</h4><div class="det">
+      ${campo("Situação", [e.situacao, e.dataSituacao && "desde " + dataBR(e.dataSituacao)].filter(Boolean).join(" "))}
+      ${e.motivo && !/SEM MOTIVO/i.test(e.motivo) ? campo("Motivo", e.motivo) : ""}
+      ${campo("Abertura", dataBR(e.abertura))}
+      ${campo("Porte", e.porte)}
+      ${campo("Capital social", dinheiro(e.capital))}
+      ${campo("Simples Nacional", simNao(e.simples))}
+      ${campo("MEI", simNao(e.mei))}
+      ${campo("Natureza jurídica", e.natureza, true)}
+    </div></div>
+    <div class="card emp"><h4>Endereço e contato</h4><div class="det">
+      ${campo("Endereço", end, true)}
+      ${campo("Bairro", e.bairro)}
+      ${campo("Cidade", e.cidade && e.cidade + (e.uf ? " - " + e.uf : ""))}
+      ${campo("CEP", cepFmt(e.cep))}
+      ${campo("Telefone", e.telefones.join(" / "))}
+      ${campo("E-mail", (e.email || "").toLowerCase(), true)}
+    </div></div>
+    <div class="card emp"><h4>Atividades</h4>
+      <ul>
+        ${e.cnae ? `<li><code>${esc(e.cnae.codigo)}</code><span>${esc(e.cnae.descricao)}</span><small>principal</small></li>` : ""}
+        ${e.cnaes2.map(c => `<li><code>${esc(c.codigo)}</code><span>${esc(c.descricao)}</span></li>`).join("")}
+      </ul>
+      ${!e.cnae && !e.cnaes2.length ? `<div class="status">Nenhuma atividade informada.</div>` : ""}
+    </div>
+    <div class="card emp"><h4>Sócios e administradores</h4>
+      ${e.socios.length ? `<ul>${e.socios.map(s => `<li><span><b>${esc(s.nome)}</b>${s.qualificacao ? `<br><span class="status" style="margin:0">${esc(s.qualificacao)}</span>` : ""}</span>${s.desde ? `<small>desde ${esc(dataBR(s.desde))}</small>` : ""}</li>`).join("")}</ul>`
+        : `<div class="status" style="margin:0">Sem sócios informados (comum em MEI e empresário individual).</div>`}
+    </div>
+    <div class="emp-acoes">
+      <button class="btn" type="button" id="btnUsarEmpresa">Usar no cadastro</button>
+      <button class="btn ghost" type="button" id="btnCopiarEmpresa">Copiar dados</button>
+    </div>
+    <div class="fonte">Dados públicos da Receita Federal, via ${esc(e.fonte)}. Podem estar alguns dias desatualizados.</div>`;
+  $("#btnCopiarEmpresa").addEventListener("click", () => copiar(textoEmpresa(e)));
+  $("#btnUsarEmpresa").addEventListener("click", () => {
+    const jaExiste = acharPorCnpj(e.cnpj);
+    $("#f_empresa").value = jaExiste ? jaExiste.nome : (e.fantasia || e.razao || "");
+    $("#f_cnpj").readOnly = false; delete $("#f_cnpj").dataset.auto;
+    $("#f_cnpj").value = formatarCnpj(e.cnpj);
+    razaoNova = e.razao || ""; cnpjConsultado = limparCnpj(e.cnpj);
+    previaId(); atualizarEmpresa();
+    $("#resultado").hidden = true; $("#formCadastro").hidden = false;
+    trocarAba("novo");
+    $("#f_pessoa").focus();
+    toast("Empresa preenchida no cadastro");
+  });
+}
+
+$("#inCnpj").addEventListener("input", () => {
+  const el = $("#inCnpj"), c = limparCnpj(el.value), h = $("#hintCnpj");
+  el.value = formatarCnpj(c);
+  if(!c){ h.textContent = ""; h.className = "hint"; return; }
+  if(c.length < 14){ h.textContent = c.length + " de 14 caracteres"; h.className = "hint"; return; }
+  const ok = cnpjValido(c);
+  h.textContent = ok ? "CNPJ válido" : "CNPJ inválido (confira os números)";
+  h.className = "hint " + (ok ? "ok" : "err");
+});
+$("#formCnpj").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const c = limparCnpj($("#inCnpj").value), h = $("#hintCnpj");
+  if(!cnpjValido(c)){ h.textContent = "Digite um CNPJ válido com 14 caracteres."; h.className = "hint err"; return; }
+  const btn = $("#btnCnpj"); btn.disabled = true; btn.textContent = "Consultando…";
+  $("#resCnpj").innerHTML = "";
+  h.textContent = "Buscando na Receita Federal…"; h.className = "hint";
+  try{
+    empresaAtual = await consultarCnpj(c);
+    h.textContent = ""; renderEmpresa(empresaAtual);
+  }catch(e){
+    h.textContent = e.message; h.className = "hint err";
+  }finally{
+    btn.disabled = false; btn.textContent = "Consultar";
+  }
 });
 
 /* ---------- início ---------- */
