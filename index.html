@@ -204,13 +204,16 @@
   .emp-pes div{background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
   .emp-pes b{display:block;color:#fff;font-size:14px;margin:2px 0}
   .emp-cads{grid-column:1/-1;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-  .emp-cad{display:grid;grid-template-columns:1.2fr 1.6fr .9fr .8fr;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13.5px}
+  .emp-cad{display:grid;grid-template-columns:1.2fr 1.6fr .9fr .8fr .55fr;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13.5px}
   .emp-cad:last-child{border-bottom:0}
   .emp-cad b{color:#fff;text-transform:capitalize;font-weight:600}
   .emp-cad .m{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#c4a8ff;word-break:break-all;font-size:12.5px}
   .emp-cad small{color:var(--muted)}
+  .emp-cad .v{text-align:right;font-variant-numeric:tabular-nums;color:#fff;font-weight:600;white-space:nowrap}
+  .emp-cad.cab .v{color:var(--muted);font-weight:inherit}
+  .emp-cad.tot{background:rgba(155,123,255,.12);font-weight:700;color:#e3dbff;font-size:12px;text-transform:uppercase;letter-spacing:.1em}
   .emp-cad.cab{background:rgba(0,0,0,.25);font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:8px 14px}
-  @media (max-width:640px){ .emp-cad{grid-template-columns:1fr 1fr} .emp-cad.cab{display:none} }
+  @media (max-width:640px){ .emp-cad{grid-template-columns:1fr 1fr} .emp-cad.cab{display:none} .emp-cad.tot span:empty{display:none} }
   .qtd{display:inline-block;margin-top:6px;padding:2px 9px;border-radius:999px;background:rgba(192,92,255,.22);color:#f0e6ff;font-size:11px;font-weight:700;letter-spacing:.04em}
   /* ---------- aba Empresas ---------- */
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important;letter-spacing:.03em}
@@ -1111,13 +1114,15 @@ function renderTodas(){
         ${campo("Sobra por cadastro", isNaN(resto) ? "—" : usd(resto) + " USD")}
         <div class="emp-sec">Pessoas cadastradas (${cads.length})</div>
         ${cads.length ? `<div class="emp-cads">
-          <div class="emp-cad cab"><span>Nome</span><span>E-mail</span><span>Pix</span><span>Operador / data</span></div>
+          <div class="emp-cad cab"><span>Nome</span><span>E-mail</span><span>Pix</span><span>Operador / data</span><span class="v">$</span></div>
           ${cads.map(c => `<div class="emp-cad${c.desativado ? " off" : ""}" ${c.desativado ? 'title="Perfil desativado"' : ""}>
             <b>${esc(c.pessoa) || "—"}</b>
             <span class="m">${esc(c.email) || "—"}</span>
             <span>${esc(c.pix) || "—"}</span>
             <small>${c.desativado ? `<b style="color:#ff6b7a;text-decoration:none">DESATIVADO</b><br>` : ""}${esc(c.operador || "sem operador")}<br>${esc(c.data)}</small>
+            <span class="v">${esc(c.valor) || "—"}</span>
           </div>`).join("")}
+          <div class="emp-cad tot"><span>Total</span><span></span><span></span><span></span><span class="v">${usd(cads.reduce((t, c) => t + (lerValor(c.valor) || 0), 0))}</span></div>
         </div>` : `<div class="emp-cads"><div class="emp-cad"><small>Nenhum cadastro com essa empresa ainda.</small></div></div>`}
         <div class="acts">
           ${e.cnpj ? `<button class="copy" data-txt="${esc(e.cnpj)}">Copiar CNPJ</button>` : ""}
