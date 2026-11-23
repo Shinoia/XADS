@@ -561,8 +561,10 @@ async function api(acao, extra){
   try{ j = JSON.parse(texto); }
   catch(e){ throw new Error("A planilha respondeu algo inesperado (HTTP " + r.status + "). Confira se o App da Web foi publicado com o código novo."); }
   if(!j.ok){
-    // usuário removido da aba Operadores ou senha trocada: volta para o login
-    if(/usu[aá]rio ou senha/i.test(j.erro || "") && !$("#telaApp").hidden) sair("Seu acesso mudou. Entre de novo.");
+    // o login continua salvo no aparelho; só sai quando a pessoa clica em "sair".
+    // Se a senha mudou na aba Operadores, avisa (sem deslogar).
+    if(/usu[aá]rio ou senha/i.test(j.erro || "") && !$("#telaApp").hidden)
+      throw new Error("Seu usuário ou senha mudou na planilha. Clique em sair e entre de novo.");
     throw new Error(j.erro || "Erro.");
   }
   if(j.operador){ sessao.operador = j.operador; mostrarOperador(j.operador); }
@@ -653,6 +655,7 @@ $("#formEntrada").addEventListener("submit", async ev => {
   try{
     const j = await api("entrar");  // confere usuário e senha e grava o login no histórico
     store.set("cad_usuario", usuario); store.set("cad_senha", senha);
+    guardarParaSempre();
     receberCadastros(j.cadastros);
     entrarNoApp();
   }catch(e){
@@ -1381,6 +1384,11 @@ $("#formEmp").addEventListener("submit", async ev => {
   }
 });
 
+// pede ao navegador para não apagar os dados do site sozinho (mantém o login salvo)
+function guardarParaSempre(){
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); }catch(e){}
+}
+
 /* ---------- início ---------- */
 (function iniciar(){
   const u = store.get("cad_usuario"), s = store.get("cad_senha");
@@ -1390,6 +1398,7 @@ $("#formEmp").addEventListener("submit", async ev => {
     if(cache) cadastros = cache.cadastros || [];
     entrarNoApp();
     aplicarPerfil();
+    guardarParaSempre();
     // registra que voltou ao site e atualiza a lista por trás
     api("abrir").then(j => receberCadastros(j.cadastros)).catch(() => {});
   }else{
