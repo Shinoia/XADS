@@ -185,6 +185,20 @@
   .acesso .sep{color:#5d547f;margin:0 6px}
   .acesso time{font-variant-numeric:tabular-nums;color:var(--soft)}
   .acesso small{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+  /* ---------- todas as empresas (admin) ---------- */
+  .emp-sec{grid-column:1/-1;margin:6px 0 -4px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c4a8ff}
+  .emp-pes{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+  .emp-pes div{background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
+  .emp-pes b{display:block;color:#fff;font-size:14px;margin:2px 0}
+  .emp-cads{grid-column:1/-1;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .emp-cad{display:grid;grid-template-columns:1.2fr 1.6fr .9fr .8fr;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13.5px}
+  .emp-cad:last-child{border-bottom:0}
+  .emp-cad b{color:#fff;text-transform:capitalize;font-weight:600}
+  .emp-cad .m{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#c4a8ff;word-break:break-all;font-size:12.5px}
+  .emp-cad small{color:var(--muted)}
+  .emp-cad.cab{background:rgba(0,0,0,.25);font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:8px 14px}
+  @media (max-width:640px){ .emp-cad{grid-template-columns:1fr 1fr} .emp-cad.cab{display:none} }
+  .qtd{display:inline-block;margin-top:6px;padding:2px 9px;border-radius:999px;background:rgba(192,92,255,.22);color:#f0e6ff;font-size:11px;font-weight:700;letter-spacing:.04em}
   /* ---------- aba Empresas ---------- */
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important;letter-spacing:.03em}
   .grid3{display:grid;grid-template-columns:1.6fr 1.2fr .9fr;gap:14px}
@@ -283,6 +297,7 @@
       <button type="button" class="on" data-aba="novo">Novo Operador</button>
       <button type="button" data-aba="empresas">Nova empresa</button>
       <button type="button" data-aba="lista"><span id="rotLista">Meus cadastros</span><span class="badge" id="contador">0</span></button>
+      <button type="button" data-aba="todas" id="tabTodas" hidden>Empresas</button>
       <button type="button" data-aba="acessos" id="tabAcessos" hidden>Acessos</button>
     </nav>
 
@@ -452,6 +467,16 @@
 
     </section>
 
+    <!-- TODAS AS EMPRESAS (só administrador) -->
+    <section id="abaTodas" hidden>
+      <div class="toolbar">
+        <input id="buscaEmp" placeholder="Buscar por apelido, CNPJ, razão social, cidade ou dono">
+        <button class="btn ghost" id="btnAtualizarTodas" type="button">Atualizar</button>
+      </div>
+      <div class="status" id="statusTodas"></div>
+      <div id="listaTodas"></div>
+    </section>
+
     <!-- ACESSOS (só administrador) -->
     <section id="abaAcessos" hidden>
       <div class="toolbar">
@@ -553,6 +578,7 @@ function receberCadastros(lista){
   ultimaBusca = Date.now();
   salvarCache();
   renderLista();
+  if(sessao.admin && !$("#abaTodas").hidden) renderTodas();
 }
 
 /* ---------- sessão do operador ---------- */
@@ -581,8 +607,10 @@ function aplicarPerfil(){
   $("#rotLista").textContent = "Meus cadastros";
   $("#btnVerLista").textContent = "Ver meus cadastros";
   $("#tabAcessos").hidden = !adm;
+  $("#tabTodas").hidden = !adm;
   $("#filtroOp").hidden = !todos;
-  if(!adm && !$("#abaAcessos").hidden) trocarAba("novo");
+  if(!adm && (!$("#abaAcessos").hidden || !$("#abaTodas").hidden)) trocarAba("novo");
+  if(adm && !$("#abaTodas").hidden) renderTodas();
   renderLista();
 }
 function entrarNoApp(){
@@ -638,10 +666,12 @@ function trocarAba(nome){
   $("#abaNovo").hidden = nome !== "novo";
   $("#abaLista").hidden = nome !== "lista";
   $("#abaAcessos").hidden = nome !== "acessos";
+  $("#abaTodas").hidden = nome !== "todas";
   $("#abaEmpresas").hidden = nome !== "empresas";
   if(nome === "empresas"){ setTimeout(() => { if(!$("#e_cnpj").value) $("#e_cnpj").focus(); }, 50); }
   if(nome === "lista") carregarLista();
   if(nome === "acessos") carregarAcessos();
+  if(nome === "todas") carregarTodas();
 }
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => trocarAba(b.dataset.aba)));
 
@@ -727,6 +757,7 @@ function receberEmpresas(lista){
   store.set("cad_empresas", JSON.stringify(empresas));
   $("#listaEmpresas").innerHTML = empresas.map(e => `<option value="${esc(e.apelido)}">${esc(e.cnpj || "")}</option>`).join("");
   atualizarEmpresa();
+  if(sessao.admin && !$("#abaTodas").hidden) renderTodas();
 }
 const acharEmpresa = nome => empresas.find(e => chaveEmp(e.apelido) === chaveEmp(nome));
 const acharPorCnpj = c => empresas.find(e => limparCnpj(e.cnpj) === limparCnpj(c));
@@ -955,6 +986,111 @@ function atualizarFiltroOp(){
     (semOp ? `<option value="-">Sem operador (${cadastros.filter(c => !c.operador).length})</option>` : "");
   sel.value = [...sel.options].some(o => o.value === atual) ? atual : "";
 }
+
+/* ---------- todas as empresas, com os cadastros de cada uma (só administrador) ---------- */
+async function carregarTodas(forcar){
+  renderTodas();
+  if(!forcar && Date.now() - ultimaBusca < 30000 && empresas.length) return;
+  $("#btnAtualizarTodas").textContent = "Atualizando…";
+  if(!empresas.length) $("#statusTodas").textContent = "Carregando…";
+  try{
+    receberCadastros(await apiListar());   // traz cadastros e empresas
+  }catch(e){
+    $("#statusTodas").textContent = "Erro: " + (e.message === "Failed to fetch" ? "sem conexão com a planilha." : e.message);
+  }finally{
+    $("#btnAtualizarTodas").textContent = "Atualizar";
+  }
+}
+// liga cada cadastro à sua empresa: pelo nome (coluna C); se houver duas com o mesmo nome,
+// fica a do operador que fez o cadastro; se o nome não bater com nenhuma, tenta pelo CNPJ (coluna U)
+function cadastrosPorEmpresa(){
+  const mapa = new Map(empresas.map(e => [e, []]));
+  cadastros.forEach(c => {
+    const mesmas = empresas.filter(e => chaveEmp(e.apelido) === chaveEmp(c.empresa));
+    let emp = mesmas.find(e => limpar(e.criadoPor) === limpar(c.operador)) || mesmas[0];
+    if(!emp && limparCnpj(c.cnpj)) emp = empresas.find(e => limparCnpj(e.cnpj) === limparCnpj(c.cnpj));
+    if(emp) mapa.get(emp).push(c);
+  });
+  return mapa;
+}
+function renderTodas(){
+  if(!sessao.admin) return;
+  const q = limpar($("#buscaEmp").value.trim());
+  const mapa = cadastrosPorEmpresa();
+  const lista = empresas.filter(e => !q || limpar([e.apelido, e.cnpj, limparCnpj(e.cnpj), e.razao, e.fantasia, e.cidade, e.criadoPor].join(" ")).includes(q));
+  const totCad = [...mapa.values()].reduce((t, l) => t + l.length, 0);
+  $("#statusTodas").textContent = !empresas.length ? "" :
+    q ? `${lista.length} de ${empresas.length} empresas` :
+    `${empresas.length} empresa${empresas.length === 1 ? "" : "s"} · ${totCad} cadastro${totCad === 1 ? "" : "s"} ligados a elas`;
+  if(!empresas.length){ $("#listaTodas").innerHTML = `<div class="empty">Nenhuma empresa cadastrada ainda.</div>`; return; }
+  if(!lista.length){ $("#listaTodas").innerHTML = `<div class="empty">Nada encontrado para essa busca.</div>`; return; }
+  const campo = (rot, val) => `<div><small>${rot}</small>${esc(val) || "—"}</div>`;
+  const rotP = ["Empresário", "Inter 1", "Inter 2"];
+  $("#listaTodas").innerHTML = lista.map(e => {
+    const cads = mapa.get(e) || [];
+    const pes = (e.pessoas || []).map((p, i) => p && (p.nome || p.contato || p.valor) ? `
+      <div><small>${rotP[i]}</small><b>${esc(p.nome) || "—"}</b>${esc(p.contato) || "sem contato"} · ${esc(p.valor) || "sem valor"}</div>` : "").join("");
+    const resto = restanteDe(e.pessoas);
+    return `
+    <details class="item">
+      <summary>
+        <div class="who">
+          <b>${esc(e.apelido)}</b>
+          <span>${esc(e.cnpj) || "sem CNPJ"}</span>
+          <div class="mini">
+            <em><small>Razão social</small>${esc(e.razao) || "—"}</em>
+            <em><small>Situação</small>${esc(e.situacao) || "—"}</em>
+          </div>
+        </div>
+        <div class="when">${esc(cidadeCurta(e.cidade)) || ""}<br><span class="por">${esc(e.criadoPor || "sem dono")}</span><br><span class="qtd">${cads.length} cadastro${cads.length === 1 ? "" : "s"}</span></div>
+      </summary>
+      <div class="det">
+        <div class="emp-sec">Dados da empresa</div>
+        ${campo("Apelido", e.apelido)}
+        ${campo("CNPJ", (e.cnpj || "") + (e.tipo ? " · " + e.tipo : ""))}
+        ${campo("Razão social", e.razao)}
+        ${campo("Nome fantasia", e.fantasia)}
+        ${campo("Situação", (e.situacao || "") + (e.desde ? " desde " + e.desde : "") + (e.motivo ? " · " + e.motivo : ""))}
+        ${campo("Abertura", e.abertura)}
+        ${campo("Porte", e.porte)}
+        ${campo("Natureza jurídica", e.natureza)}
+        ${campo("Capital social", e.capital)}
+        ${campo("Atividade principal", e.cnae)}
+        ${campo("Endereço", e.endereco)}
+        ${campo("Cidade", e.cidade)}
+        ${campo("CEP", e.cep)}
+        ${campo("Telefone", e.telefones)}
+        ${campo("E-mail", e.email)}
+        ${campo("Simples / MEI", "Simples: " + (e.simples || "—") + " · MEI: " + (e.mei || "—"))}
+        ${campo("Cadastrada por", (e.criadoPor || "") + (e.criadoEm ? " em " + e.criadoEm : ""))}
+        ${e.atualizadoEm ? campo("Atualizada em", e.atualizadoEm) : ""}
+        <div class="emp-sec">Empresário e inters</div>
+        <div class="emp-pes">${pes || `<div>Nenhum preenchido.</div>`}</div>
+        ${campo("Sobra por cadastro", isNaN(resto) ? "—" : usd(resto) + " USD")}
+        <div class="emp-sec">Pessoas cadastradas (${cads.length})</div>
+        ${cads.length ? `<div class="emp-cads">
+          <div class="emp-cad cab"><span>Nome</span><span>E-mail</span><span>Pix</span><span>Operador / data</span></div>
+          ${cads.map(c => `<div class="emp-cad">
+            <b>${esc(c.pessoa) || "—"}</b>
+            <span class="m">${esc(c.email) || "—"}</span>
+            <span>${esc(c.pix) || "—"}</span>
+            <small>${esc(c.operador || "sem operador")}<br>${esc(c.data)}</small>
+          </div>`).join("")}
+        </div>` : `<div class="emp-cads"><div class="emp-cad"><small>Nenhum cadastro com essa empresa ainda.</small></div></div>`}
+        <div class="acts">
+          ${e.cnpj ? `<button class="copy" data-txt="${esc(e.cnpj)}">Copiar CNPJ</button>` : ""}
+          ${cads.length ? `<button class="copy" data-txt="${esc(cads.map(c => c.email).filter(Boolean).join("\n"))}">Copiar e-mails</button>` : ""}
+        </div>
+      </div>
+    </details>`;
+  }).join("");
+}
+$("#buscaEmp").addEventListener("input", renderTodas);
+$("#btnAtualizarTodas").addEventListener("click", () => carregarTodas(true));
+$("#listaTodas").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-txt]");
+  if(b) copiar(b.dataset.txt);
+});
 
 /* ---------- acessos (só administrador) ---------- */
 let acessos = [];
