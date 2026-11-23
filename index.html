@@ -166,6 +166,19 @@
   .item .mini small{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
   .item .when{font-size:12px;color:var(--muted);text-align:right;white-space:nowrap;text-transform:uppercase;letter-spacing:.06em}
   .item[open]{border-color:rgba(155,123,255,.35)}
+  .item{position:relative}
+  .item.off,.item.off:hover,.item.off[open]{border-color:rgba(255,77,94,.75);background:rgba(255,46,70,.13);box-shadow:0 0 0 1px rgba(255,77,94,.25) inset}
+  .item.off .who b,.item.off .who span{color:#ffb3bc}
+  .item.off summary{padding-top:44px}
+  .aviso-off{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:7px 14px;
+    background:linear-gradient(90deg,#d7263d,#ff4d5e);color:#fff;font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;z-index:1}
+  .aviso-off small{margin-left:auto;font-weight:500;letter-spacing:0;text-transform:none;opacity:.9;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .desat{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);
+    background:rgba(0,0,0,.25);color:var(--soft);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:none;cursor:pointer;user-select:none}
+  .desat input,.desat input:focus{width:14px;height:14px;margin:0;padding:0;border-radius:3px;box-shadow:none;accent-color:#ff4d5e;cursor:pointer}
+  .item.off .desat{border-color:rgba(255,77,94,.6);color:#ffd0d6}
+  .desat.salvando{opacity:.55;cursor:wait}
+  .emp-cad.off b,.emp-cad.off .m{color:#ff8a96;text-decoration:line-through}
   .item[open] summary{border-bottom:1px solid var(--line)}
   .det{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px 18px;padding:16px 18px;background:rgba(0,0,0,.15)}
   .det div small{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
@@ -931,8 +944,9 @@ function renderLista(){
 
   const campo = (rot, val) => `<div><small>${rot}</small>${esc(val) || "—"}</div>`;
   $("#lista").innerHTML = filtrados.map(c => `
-    <details class="item">
+    <details class="item${c.desativado ? " off" : ""}">
       <summary>
+        ${c.desativado ? `<div class="aviso-off">⚠ Perfil desativado<small>${esc(String(c.status || "").replace(/^desativado\s*/i, ""))}</small></div>` : ""}
         <div class="who">
           <b>${esc(c.pessoa)}</b>
           <span>${esc(c.email)}</span>
@@ -942,7 +956,7 @@ function renderLista(){
             <em><small>Pix</small>${esc(c.pix) || "—"}</em>
           </div>
         </div>
-        <div class="when">${esc(c.empresa)}<br>${esc(c.data)}${verTodos() ? `<br><span class="por">${esc(c.operador || "sem operador")}</span>` : ""}${cidadeCurta(c.cidade) ? `<br><span class="cid">${esc(cidadeCurta(c.cidade))}</span>` : ""}</div>
+        <div class="when">${esc(c.empresa)}<br>${esc(c.data)}${verTodos() ? `<br><span class="por">${esc(c.operador || "sem operador")}</span>` : ""}${cidadeCurta(c.cidade) ? `<br><span class="cid">${esc(cidadeCurta(c.cidade))}</span>` : ""}${sessao.admin && c.id ? `<br><label class="desat" data-desat="${esc(c.id)}"><input type="checkbox" tabindex="-1"${c.desativado ? " checked" : ""}> Desativado</label>` : ""}</div>
       </summary>
       <div class="det">
         ${campo("E-mail", c.email)}
@@ -985,6 +999,34 @@ function atualizarFiltroOp(){
     nomes.map(n => `<option value="${esc(limpar(n))}">${esc(n)} (${cont(n)})</option>`).join("") +
     (semOp ? `<option value="-">Sem operador (${cadastros.filter(c => !c.operador).length})</option>` : "");
   sel.value = [...sel.options].some(o => o.value === atual) ? atual : "";
+}
+
+/* ---------- admin desativa / reativa um cadastro (fica vermelho no site e marcado na coluna V) ---------- */
+async function alternarDesativado(id, el){
+  if(!sessao.admin) return;
+  const c = cadastros.find(x => x.id === id);
+  if(!c || (el && el.classList.contains("salvando"))) return;
+  const antes = { desativado:c.desativado, status:c.status };
+  const aberto = !!(el && el.closest("details") && el.closest("details").open);
+  c.desativado = !c.desativado;
+  c.status = c.desativado ? "Desativado por " + sessao.operador : "";
+  renderLista(); manterAberto(id, aberto);
+  const novo = document.querySelector(`[data-desat="${CSS.escape(id)}"]`);
+  if(novo) novo.classList.add("salvando");
+  try{
+    const j = await api("desativar", { id, desativar:c.desativado });
+    c.status = j.status || ""; c.desativado = !!j.desativado;
+    toast(c.desativado ? "Perfil desativado" : "Perfil reativado");
+  }catch(e){
+    Object.assign(c, antes);
+    toast("Não salvou: " + e.message);
+  }
+  salvarCache(); renderLista(); manterAberto(id, aberto);
+}
+// depois de redesenhar a lista, reabre o cartão se ele estava aberto
+function manterAberto(id, aberto){
+  const el = document.querySelector(`[data-desat="${CSS.escape(id)}"]`);
+  if(el && aberto) el.closest("details").open = true;
 }
 
 /* ---------- todas as empresas, com os cadastros de cada uma (só administrador) ---------- */
@@ -1070,11 +1112,11 @@ function renderTodas(){
         <div class="emp-sec">Pessoas cadastradas (${cads.length})</div>
         ${cads.length ? `<div class="emp-cads">
           <div class="emp-cad cab"><span>Nome</span><span>E-mail</span><span>Pix</span><span>Operador / data</span></div>
-          ${cads.map(c => `<div class="emp-cad">
+          ${cads.map(c => `<div class="emp-cad${c.desativado ? " off" : ""}" ${c.desativado ? 'title="Perfil desativado"' : ""}>
             <b>${esc(c.pessoa) || "—"}</b>
             <span class="m">${esc(c.email) || "—"}</span>
             <span>${esc(c.pix) || "—"}</span>
-            <small>${esc(c.operador || "sem operador")}<br>${esc(c.data)}</small>
+            <small>${c.desativado ? `<b style="color:#ff6b7a;text-decoration:none">DESATIVADO</b><br>` : ""}${esc(c.operador || "sem operador")}<br>${esc(c.data)}</small>
           </div>`).join("")}
         </div>` : `<div class="emp-cads"><div class="emp-cad"><small>Nenhum cadastro com essa empresa ainda.</small></div></div>`}
         <div class="acts">
@@ -1122,6 +1164,8 @@ $("#filtroAcesso").addEventListener("change", renderAcessos);
 $("#btnAtualizarAcessos").addEventListener("click", carregarAcessos);
 $("#btnAtualizar").addEventListener("click", () => carregarLista(true));
 $("#lista").addEventListener("click", ev => {
+  const d = ev.target.closest("[data-desat]");
+  if(d){ ev.preventDefault(); ev.stopPropagation(); alternarDesativado(d.dataset.desat, d); return; }
   const b = ev.target.closest("[data-txt]");
   if(b) copiar(b.dataset.txt);
 });
