@@ -188,6 +188,10 @@
     font-size:11px;font-weight:600;text-transform:none;letter-spacing:0}
   .cid{display:inline-flex;align-items:center;gap:4px;margin-top:6px;color:#d9ccff;font-size:11.5px;font-weight:700;letter-spacing:.08em}
   .cid::before{content:"";width:6px;height:6px;border-radius:50%;background:#c05cff;box-shadow:0 0 8px #c05cff}
+  .aviso-sessao{margin:0 0 14px;padding:12px 16px;border-radius:14px;background:rgba(255,46,70,.16);border:1px solid rgba(255,77,94,.6);color:#ffd0d6;font-size:14px;font-weight:600}
+  .acesso.ruim b,.acesso.ruim small{color:#ff8a96}
+  .acesso.ruim .ini{background:linear-gradient(135deg,#d7263d,#ff4d5e)}
+  .acesso .ap{color:var(--muted);font-size:11.5px;margin-left:8px}
   .acessos{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
   .acessos:empty{display:none}
   .acesso{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:14.5px}
@@ -309,6 +313,7 @@
 
   <!-- APP -->
   <section id="telaApp" hidden>
+    <div class="aviso-sessao" id="avisoSessao" hidden></div>
     <nav class="tabs">
       <button type="button" class="on" data-aba="novo">Novo Operador</button>
       <button type="button" data-aba="empresas">Nova empresa</button>
@@ -538,8 +543,25 @@ function mostrarErro(el, msg){ el.textContent = msg; el.hidden = !msg; }
 function apiPronta(){
   return API_URL && API_URL.startsWith("https://");
 }
+// identificação do aparelho (igual ao sistema do bar): usada no bloqueio por troca de usuário e no histórico
+const DEV = (() => {
+  let d = store.get("xadz_dev");
+  if(!d){ d = Math.random().toString(36).slice(2, 6); store.set("xadz_dev", d); }
+  const ua = navigator.userAgent || "";
+  const plat = /iPad/.test(ua) ? "iPad" : /iPhone/.test(ua) ? "iPhone" : /Android/.test(ua) ? "Android" :
+               /Windows/.test(ua) ? "Windows" : /Mac/.test(ua) ? "Mac" : /Linux/.test(ua) ? "Linux" : "Aparelho";
+  return plat + " " + d;
+})();
+// quando a planilha recusa a senha de quem já estava logado (senha trocada / usuário apagado), o site para de
+// mandar pedidos com essa senha — senão cada pedido contaria como tentativa errada e bloquearia o usuário.
+let sessaoTravada = "";
+function travarSessao(msg){
+  sessaoTravada = msg;
+  const a = $("#avisoSessao"); a.textContent = "⚠ " + msg; a.hidden = false;
+}
 // todos os pedidos vão por POST (a senha não aparece na URL)
 async function api(acao, extra){
+  if(sessaoTravada && acao !== "entrar") throw new Error(sessaoTravada);
   // sem cabeçalhos: o navegador envia como texto simples e o Apps Script aceita
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 40000); // desiste depois de 40 s
@@ -547,7 +569,7 @@ async function api(acao, extra){
   try{
     r = await fetch(API_URL, {
       method:"POST",
-      body: JSON.stringify(Object.assign({ acao, usuario:sessao.usuario, senha:sessao.senha }, extra || {})),
+      body: JSON.stringify(Object.assign({ acao, usuario:sessao.usuario, senha:sessao.senha, dev:DEV }, extra || {})),
       signal: ctrl.signal
     });
     texto = await r.text();
@@ -561,11 +583,30 @@ async function api(acao, extra){
   try{ j = JSON.parse(texto); }
   catch(e){ throw new Error("A planilha respondeu algo inesperado (HTTP " + r.status + "). Confira se o App da Web foi publicado com o código novo."); }
   if(!j.ok){
-    // o login continua salvo no aparelho; só sai quando a pessoa clica em "sair".
-    // Se a senha mudou na aba Operadores, avisa (sem deslogar).
-    if(/usu[aá]rio ou senha/i.test(j.erro || "") && !$("#telaApp").hidden)
-      throw new Error("Seu usuário ou senha mudou na planilha. Clique em sair e entre de novo.");
-    throw new Error(j.erro || "Erro.");
+    const logado = !$("#telaApp").hidden;
+    // perfil "Nenhum" na coluna D da aba Operadores: sem acesso a nada -> desconecta na hora
+    if(j.negado){
+      if(logado) sair(j.erro || "Seu acesso foi desativado.");
+      throw new Error(j.erro || "Seu acesso foi desativado.");
+    }
+    // o login continua salvo; só sai pelo botão "sair", se o perfil (coluna D) mudar ou se a senha for trocada.
+    // Senha trocada / usuário apagado na aba Operadores: desconecta na hora (e para de mandar a senha antiga).
+    if(logado && (j.bloqueado || /usu[aá]rio ou senha/i.test(j.erro || ""))){
+      const m = j.bloqueado ? j.erro : "Sua senha foi alterada. Entre de novo com a senha nova.";
+      sair(m);
+      throw new Error(m);
+    }
+    let msg = j.erro || "Erro.";
+    if(!logado && j.restam > 0 && j.restam <= 2) msg += ` Restam ${j.restam} tentativa${j.restam === 1 ? "" : "s"} antes do bloqueio.`;
+    throw new Error(msg);
+  }
+  // perfil da coluna D mudou (ex.: operador -> semi-admin): desconecta para entrar de novo com o acesso novo
+  if(j.perfil){
+    if(sessao.perfil && j.perfil !== sessao.perfil && !$("#telaApp").hidden){
+      sair("Seu acesso mudou na planilha (de " + sessao.perfil + " para " + j.perfil + "). Entre de novo.");
+      throw new Error("Seu acesso mudou. Entre de novo.");
+    }
+    sessao.perfil = j.perfil;
   }
   if(j.operador){ sessao.operador = j.operador; mostrarOperador(j.operador); }
   if(j.empresas) receberEmpresas(j.empresas);
@@ -586,7 +627,7 @@ async function apiCadastrar(dados){
 let ultimaBusca = 0;
 function salvarCache(){
   if(!sessao.usuario) return;
-  store.set("cad_cache_" + limpar(sessao.usuario), JSON.stringify({ admin:!!sessao.admin, cidade:sessao.cidade || "", operador:sessao.operador, cadastros }));
+  store.set("cad_cache_" + limpar(sessao.usuario), JSON.stringify({ admin:!!sessao.admin, perfil:sessao.perfil || "", cidade:sessao.cidade || "", operador:sessao.operador, cadastros }));
 }
 function lerCache(usuario){
   try{ return JSON.parse(store.get("cad_cache_" + limpar(usuario)) || "null"); }catch(e){ return null; }
@@ -651,7 +692,8 @@ $("#formEntrada").addEventListener("submit", async ev => {
   if(!senha) return mostrarErro(erro, "Digite sua senha.");
   mostrarErro(erro, "");
   const btn = $("#btnEntrar"); btn.disabled = true; btn.textContent = "Entrando…";
-  sessao = { usuario, senha, operador:usuario, admin:false };
+  sessao = { usuario, senha, operador:usuario, admin:false, perfil:"" };
+  sessaoTravada = ""; $("#avisoSessao").hidden = true;
   try{
     const j = await api("entrar");  // confere usuário e senha e grava o login no histórico
     store.set("cad_usuario", usuario); store.set("cad_senha", senha);
@@ -669,9 +711,11 @@ function sair(msg){
   if(sessao.usuario) store.del("cad_cache_" + limpar(sessao.usuario));
   store.del("cad_empresas");
   store.del("cad_senha");
-  sessao = { usuario:"", senha:"", operador:"", admin:false }; cadastros = [];
+  sessao = { usuario:"", senha:"", operador:"", admin:false, perfil:"" }; cadastros = [];
+  sessaoTravada = ""; $("#avisoSessao").hidden = true;
   $("#opBox").hidden = true; $("#telaApp").hidden = true; $("#telaEntrada").hidden = false;
   document.body.classList.add("no-login");
+  $("#inOperador").value = store.get("cad_usuario") || $("#inOperador").value;
   $("#inCodigo").value = "";
   $("#verSenha").checked = false; $("#inCodigo").type = "password";
   mostrarErro($("#erroEntrada"), msg || "");
@@ -1161,9 +1205,9 @@ function renderAcessos(){
   const lista = sel.value ? acessos.filter(a => a.usuario === sel.value) : acessos;
   $("#statusAcessos").textContent = acessos.length ? `${lista.length} acesso${lista.length === 1 ? "" : "s"} (mais recentes primeiro)` : "";
   $("#listaAcessos").innerHTML = lista.length ? lista.map(a => `
-    <div class="acesso">
+    <div class="acesso${/^(login|voltou ao site)$/i.test(a.tipo || "") ? "" : " ruim"}">
       <span class="ini">${esc(String(a.usuario || "?").charAt(0))}</span>
-      <span><b>${esc(a.usuario)}</b><span class="sep">/</span><time>${esc(a.quando)}</time></span>
+      <span><b>${esc(a.usuario)}</b><span class="sep">/</span><time>${esc(a.quando)}</time>${a.aparelho ? `<span class="ap">${esc(a.aparelho)}</span>` : ""}</span>
       <small>${esc(a.tipo)}</small>
     </div>`).join("") : "";
   if(!acessos.length) $("#statusAcessos").textContent = "Nenhum acesso registrado ainda.";
@@ -1384,6 +1428,15 @@ $("#formEmp").addEventListener("submit", async ev => {
   }
 });
 
+// confere de minuto em minuto (com o site aberto na tela) se o acesso continua valendo:
+// se o perfil da coluna D mudar ou virar "Nenhum", a pessoa é desconectada sem precisar recarregar
+function conferirAcesso(){
+  if($("#telaApp").hidden || sessaoTravada || document.visibilityState === "hidden" || !sessao.usuario) return;
+  api("ping").catch(() => {});
+}
+setInterval(conferirAcesso, 60000);
+document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") conferirAcesso(); });
+
 // pede ao navegador para não apagar os dados do site sozinho (mantém o login salvo)
 function guardarParaSempre(){
   try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); }catch(e){}
@@ -1394,13 +1447,13 @@ function guardarParaSempre(){
   const u = store.get("cad_usuario"), s = store.get("cad_senha");
   if(u && s && apiPronta()){
     const cache = lerCache(u);
-    sessao = { usuario:u, senha:s, operador:(cache && cache.operador) || u, admin:!!(cache && cache.admin), cidade:(cache && cache.cidade) || "" };
+    sessao = { usuario:u, senha:s, operador:(cache && cache.operador) || u, admin:!!(cache && cache.admin), perfil:(cache && cache.perfil) || "", cidade:(cache && cache.cidade) || "" };
     if(cache) cadastros = cache.cadastros || [];
     entrarNoApp();
     aplicarPerfil();
     guardarParaSempre();
     // registra que voltou ao site e atualiza a lista por trás
-    api("abrir").then(j => receberCadastros(j.cadastros)).catch(() => {});
+    api("abrir").then(j => { salvarCache(); receberCadastros(j.cadastros); }).catch(() => {});
   }else{
     if(u){ $("#inOperador").value = u; $("#inCodigo").focus(); }
     else $("#inOperador").focus();
