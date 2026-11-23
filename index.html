@@ -94,6 +94,8 @@
   .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:32px}
   .chips span{border:1px solid var(--line);background:var(--card-2);border-radius:999px;padding:7px 14px;font-size:12.5px;color:#d9d0ff}
   .login{padding:42px 38px}
+  .mostrar-senha{display:inline-flex;align-items:center;gap:8px;margin:10px 0 0;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);cursor:pointer;user-select:none}
+  .mostrar-senha input,.mostrar-senha input:focus{width:16px;height:16px;margin:0;padding:0;border-radius:4px;box-shadow:none;accent-color:var(--accent);cursor:pointer}
   .ajuda{font-size:12.5px;text-align:right;margin:12px 0 22px;color:var(--muted)}
   @media (max-width:860px){
     #telaEntrada{grid-template-columns:1fr;gap:22px;min-height:0}
@@ -265,6 +267,7 @@
           <div class="full">
             <label for="inCodigo">Senha <span class="req">*</span></label>
             <input id="inCodigo" type="password" autocomplete="current-password" placeholder="••••••" required>
+            <label class="mostrar-senha" for="verSenha"><input type="checkbox" id="verSenha"> Mostrar senha</label>
           </div>
         </div>
         <p class="ajuda">Esqueceu a senha? Fale com um administrador.</p>
@@ -623,6 +626,7 @@ function sair(msg){
   $("#opBox").hidden = true; $("#telaApp").hidden = true; $("#telaEntrada").hidden = false;
   document.body.classList.add("no-login");
   $("#inCodigo").value = "";
+  $("#verSenha").checked = false; $("#inCodigo").type = "password";
   mostrarErro($("#erroEntrada"), msg || "");
   $("#inCodigo").focus();
 }
@@ -1208,6 +1212,8 @@ $("#formEmp").addEventListener("submit", async ev => {
     else $("#inOperador").focus();
   }
 })();
+// caixa "Mostrar senha" na tela de login
+$("#verSenha").addEventListener("change", e => { $("#inCodigo").type = e.target.checked ? "text" : "password"; });
 </script>
 </body>
 </html>
