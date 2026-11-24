@@ -206,6 +206,7 @@
   .emp-sec{grid-column:1/-1;margin:6px 0 -4px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c4a8ff}
   .emp-pes{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
   .emp-pes div{background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
+  .emp-pes .banc{display:block;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-size:12.5px;color:#d9d0ff;word-break:break-word}
   .emp-pes b{display:block;color:#fff;font-size:14px;margin:2px 0}
   .emp-cads{grid-column:1/-1;border:1px solid var(--line);border-radius:14px;overflow:hidden}
   .emp-cad{display:grid;grid-template-columns:1.2fr 1.6fr .9fr .8fr .55fr;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13.5px}
@@ -222,6 +223,14 @@
   /* ---------- aba Empresas ---------- */
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important;letter-spacing:.03em}
   .grid3{display:grid;grid-template-columns:1.6fr 1.2fr .9fr;gap:14px}
+  .gridBanco{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:14px}
+  .gridBanco .c2{grid-column:span 2} .gridBanco .c3{grid-column:span 3}
+  @media (max-width:640px){.gridBanco{grid-template-columns:1fr 1fr}.gridBanco .c2,.gridBanco .c3{grid-column:span 1}.gridBanco .c3:last-child{grid-column:1/-1}}
+  .gridBanco .req{display:none}
+  fieldset.obrig .gridBanco .req{display:inline}
+  .obrig-aviso{display:none;margin:10px 0 0;font-size:12px;color:#ffb3c9}
+  fieldset.obrig .obrig-aviso{display:block}
+  .gridBanco input.falta{border-color:#ff4d7a;box-shadow:0 0 0 3px rgba(255,77,122,.18)}
   @media (max-width:640px){.grid3{grid-template-columns:1fr}}
   .opc{font-size:10px;color:var(--muted);letter-spacing:.1em;margin-left:6px;font-weight:600}
   #prevEmp:empty{display:none}
@@ -461,6 +470,14 @@
             <div><label for="p0_contato">Contato</label><input id="p0_contato" inputmode="tel" placeholder="(00) 00000-0000" autocomplete="off"></div>
             <div><label for="p0_valor">Valor</label><input id="p0_valor" placeholder="1,25 USD" autocomplete="off"></div>
           </div>
+          <div class="gridBanco" data-pessoa="0">
+            <div class="c2"><label for="p0_banco">Banco <span class="req">*</span></label><input id="p0_banco" autocomplete="off" placeholder="Ex.: Nubank"></div>
+            <div class="c2"><label for="p0_ag">AG <span class="req">*</span></label><input id="p0_ag" inputmode="numeric" autocomplete="off" placeholder="0000"></div>
+            <div class="c2"><label for="p0_cc">CC <span class="req">*</span></label><input id="p0_cc" autocomplete="off" placeholder="00000-0"></div>
+            <div class="c3"><label for="p0_pix">PIX <span class="req">*</span></label><input id="p0_pix" autocapitalize="off" autocomplete="off"></div>
+            <div class="c3"><label for="p0_cpf">CPF <span class="req">*</span></label><input id="p0_cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00"><div class="hint" id="p0_hintCpf"></div></div>
+          </div>
+          <p class="obrig-aviso">Com o nome preenchido, Banco, AG, CC, PIX e CPF são obrigatórios.</p>
         </fieldset>
         <fieldset>
           <h2>Inter <small class="opc">opcional</small></h2>
@@ -469,6 +486,14 @@
             <div><label for="p1_contato">Contato</label><input id="p1_contato" inputmode="tel" placeholder="(00) 00000-0000" autocomplete="off"></div>
             <div><label for="p1_valor">Valor</label><input id="p1_valor" placeholder="1,25 USD" autocomplete="off"></div>
           </div>
+          <div class="gridBanco" data-pessoa="1">
+            <div class="c2"><label for="p1_banco">Banco <span class="req">*</span></label><input id="p1_banco" autocomplete="off" placeholder="Ex.: Nubank"></div>
+            <div class="c2"><label for="p1_ag">AG <span class="req">*</span></label><input id="p1_ag" inputmode="numeric" autocomplete="off" placeholder="0000"></div>
+            <div class="c2"><label for="p1_cc">CC <span class="req">*</span></label><input id="p1_cc" autocomplete="off" placeholder="00000-0"></div>
+            <div class="c3"><label for="p1_pix">PIX <span class="req">*</span></label><input id="p1_pix" autocapitalize="off" autocomplete="off"></div>
+            <div class="c3"><label for="p1_cpf">CPF <span class="req">*</span></label><input id="p1_cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00"><div class="hint" id="p1_hintCpf"></div></div>
+          </div>
+          <p class="obrig-aviso">Com o nome preenchido, Banco, AG, CC, PIX e CPF são obrigatórios.</p>
         </fieldset>
         <fieldset>
           <h2>Inter <small class="opc">opcional</small></h2>
@@ -477,6 +502,14 @@
             <div><label for="p2_contato">Contato</label><input id="p2_contato" inputmode="tel" placeholder="(00) 00000-0000" autocomplete="off"></div>
             <div><label for="p2_valor">Valor</label><input id="p2_valor" placeholder="1,25 USD" autocomplete="off"></div>
           </div>
+          <div class="gridBanco" data-pessoa="2">
+            <div class="c2"><label for="p2_banco">Banco <span class="req">*</span></label><input id="p2_banco" autocomplete="off" placeholder="Ex.: Nubank"></div>
+            <div class="c2"><label for="p2_ag">AG <span class="req">*</span></label><input id="p2_ag" inputmode="numeric" autocomplete="off" placeholder="0000"></div>
+            <div class="c2"><label for="p2_cc">CC <span class="req">*</span></label><input id="p2_cc" autocomplete="off" placeholder="00000-0"></div>
+            <div class="c3"><label for="p2_pix">PIX <span class="req">*</span></label><input id="p2_pix" autocapitalize="off" autocomplete="off"></div>
+            <div class="c3"><label for="p2_cpf">CPF <span class="req">*</span></label><input id="p2_cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00"><div class="hint" id="p2_hintCpf"></div></div>
+          </div>
+          <p class="obrig-aviso">Com o nome preenchido, Banco, AG, CC, PIX e CPF são obrigatórios.</p>
         </fieldset>
         <div class="saldo" id="saldoEmp"></div>
         <div class="row-btns">
@@ -1121,7 +1154,8 @@ function renderTodas(){
   $("#listaTodas").innerHTML = lista.map(e => {
     const cads = mapa.get(e) || [];
     const pes = (e.pessoas || []).map((p, i) => p && (p.nome || p.contato || p.valor) ? `
-      <div><small>${rotP[i]}</small><b>${esc(p.nome) || "—"}</b>${esc(p.contato) || "sem contato"} · ${esc(p.valor) || "sem valor"}</div>` : "").join("");
+      <div><small>${rotP[i]}</small><b>${esc(p.nome) || "—"}</b>${esc(p.contato) || "sem contato"} · ${esc(p.valor) || "sem valor"}
+        ${p.banco || p.pix || p.cpf ? `<span class="banc">Banco ${esc(p.banco) || "—"} · AG ${esc(p.ag) || "—"} · CC ${esc(p.cc) || "—"}<br>PIX ${esc(p.pix) || "—"}<br>CPF ${esc(p.cpf) || "—"}</span>` : ""}</div>` : "").join("");
     const resto = restanteDe(e.pessoas);
     return `
     <details class="item">
@@ -1326,12 +1360,48 @@ function atualizarSaldo(){
     ${invalidos.length ? `<span class="aviso">Valor não entendido em: ${invalidos.join(", ")}. Use números, ex.: 1,25 USD.</span>` : ""}`;
   return { resta, invalidos };
 }
+const CAMPOS_PESSOA = ["nome", "contato", "valor", "banco", "ag", "cc", "pix", "cpf"];
+const CAMPOS_BANCO = ["banco", "ag", "cc", "pix", "cpf"];
+const ROT_BANCO = { banco:"Banco", ag:"AG", cc:"CC", pix:"PIX", cpf:"CPF" };
 function lerPessoasForm(){
-  return [0, 1, 2].map(i => ({ nome: $(`#p${i}_nome`).value.trim(), contato: $(`#p${i}_contato`).value.trim(), valor: $(`#p${i}_valor`).value.trim() }));
+  return [0, 1, 2].map(i => Object.fromEntries(CAMPOS_PESSOA.map(k => [k, $(`#p${i}_${k}`).value.trim()])));
 }
 function preencherPessoas(ps){
   [0, 1, 2].forEach(i => { const p = (ps || [])[i] || {};
-    $(`#p${i}_nome`).value = p.nome || ""; $(`#p${i}_contato`).value = p.contato || ""; $(`#p${i}_valor`).value = p.valor || ""; });
+    CAMPOS_PESSOA.forEach(k => { $(`#p${i}_${k}`).value = p[k] || ""; });
+    marcarObrigatorio(i); });
+}
+// com o nome preenchido, os campos de banco/PIX/CPF viram obrigatórios
+function marcarObrigatorio(i){
+  const fs = $(`#p${i}_nome`).closest("fieldset");
+  const temNome = !!$(`#p${i}_nome`).value.trim();
+  fs.classList.toggle("obrig", temNome);
+  CAMPOS_BANCO.forEach(k => { const el = $(`#p${i}_${k}`); el.required = temNome; if(!temNome || el.value.trim()) el.classList.remove("falta"); });
+  dicaCpf(i);
+}
+function cpfMascara(v){
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  return d.replace(/^(\d{3})(\d)/, "$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1-$2");
+}
+function dicaCpf(i){
+  const c = $(`#p${i}_cpf`).value.replace(/\D/g, ""), h = $(`#p${i}_hintCpf`);
+  if(!c){ h.textContent = ""; h.className = "hint"; return; }
+  if(c.length < 11){ h.textContent = c.length + " de 11 dígitos"; h.className = "hint"; return; }
+  const ok = cpfValido(c);
+  h.textContent = ok ? "CPF válido" : "CPF inválido (confira os números)";
+  h.className = "hint " + (ok ? "ok" : "err");
+}
+// confere antes de salvar: devolve a mensagem de erro (ou "")
+function conferirPessoas(){
+  const PAP = ["Empresário", "Inter 1", "Inter 2"];
+  for(let i = 0; i < 3; i++){
+    if(!$(`#p${i}_nome`).value.trim()) continue;
+    const faltam = CAMPOS_BANCO.filter(k => !$(`#p${i}_${k}`).value.trim());
+    faltam.forEach(k => $(`#p${i}_${k}`).classList.add("falta"));
+    if(faltam.length){ $(`#p${i}_${faltam[0]}`).focus(); return `${PAP[i]}: preencha ${faltam.map(k => ROT_BANCO[k]).join(", ")}.`; }
+    if(!cpfValido($(`#p${i}_cpf`).value.replace(/\D/g, ""))){ $(`#p${i}_cpf`).classList.add("falta"); $(`#p${i}_cpf`).focus(); return `${PAP[i]}: CPF inválido. Confira os números.`; }
+  }
+  return "";
 }
 function previa(e){
   if(!e) return "";
@@ -1397,6 +1467,12 @@ async function aoDigitarCnpj(){
 $("#e_cnpj").addEventListener("input", aoDigitarCnpj);
 [0, 1, 2].forEach(i => $(`#p${i}_contato`).addEventListener("input", ev => { ev.target.value = telMask(ev.target.value); }));
 [0, 1, 2].forEach(i => $(`#p${i}_valor`).addEventListener("input", atualizarSaldo));
+[0, 1, 2].forEach(i => {
+  $(`#p${i}_nome`).addEventListener("input", () => marcarObrigatorio(i));
+  $(`#p${i}_cpf`).addEventListener("input", ev => { ev.target.value = cpfMascara(ev.target.value); dicaCpf(i); });
+  $(`#p${i}_ag`).addEventListener("input", ev => { ev.target.value = ev.target.value.replace(/[^\dXx-]/g, ""); });
+  CAMPOS_BANCO.forEach(k => $(`#p${i}_${k}`).addEventListener("input", ev => { if(ev.target.value.trim()) ev.target.classList.remove("falta"); }));
+});
 $("#btnLimparEmp").addEventListener("click", novaEmpresa);
 atualizarSaldo();
 
@@ -1409,6 +1485,8 @@ $("#formEmp").addEventListener("submit", async ev => {
   if(saldo.invalidos.length) return mostrarErro(erro, "Confira o valor de: " + saldo.invalidos.join(", ") + ". Use números, ex.: 1,25 USD.");
   if(saldo.resta < 0) return mostrarErro(erro, `A soma das pessoas passou de ${usd(VALOR_POR_CADASTRO)} USD por cadastro.`);
   if(!apelido) return mostrarErro(erro, "Digite o apelido da empresa.");
+  const faltaPessoa = conferirPessoas();
+  if(faltaPessoa) return mostrarErro(erro, faltaPessoa);
   if(!editando){
     const mesmoNome = acharEmpresa(apelido);
     if(mesmoNome) return mostrarErro(erro, `Já existe uma empresa com o apelido "${mesmoNome.apelido}" (CNPJ ${mesmoNome.cnpj}). Escolha outro apelido.`);
